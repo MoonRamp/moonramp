@@ -1,0 +1,8 @@
+**/target
+*.swp
+*.swo
+*.db
+*.db-shm
+*.db-wal
+moonramp-0/
+programs/**/*.wasm
