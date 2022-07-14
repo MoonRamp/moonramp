@@ -2,6 +2,7 @@
 
 members = [
   "moonramp-core",
+  "moonramp-entity",
 ]
 
 exclude = [

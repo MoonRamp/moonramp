@@ -1,14 +1,25 @@
 version: 2.1
 jobs:
-  build-release:
+  test-unit:
     docker:
       - image: cimg/rust:1.62.0
     steps:
       - checkout
       - run:
           name: "Build"
-          command: "cargo build"
+          command: "cargo test"
+  build-release:
+    docker:
+      - image: cimg/rust:1.62.0
+    steps:
+      - checkout
+      - run:
+          name: "Build Release"
+          command: "cargo build --release"
 workflows:
+  test-workflow:
+    jobs:
+      - test-unit
   build-release-workflow:
     jobs:
       - build-release
