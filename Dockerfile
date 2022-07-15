@@ -1,10 +1,9 @@
 FROM rust:1.62-alpine3.16 as builder
 
-RUN adduser -D moonramp --uid 1337
-
 RUN apk add --no-cache musl-dev \
     mysql-dev postgresql-dev sqlite-dev
 
+RUN adduser -D moonramp --uid 1337
 ENV SQLITE3_STATIC=1
 
 WORKDIR /opt/moonramp
