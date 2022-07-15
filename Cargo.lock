@@ -42,9 +42,9 @@ dependencies = [
 
 [[package]]
 name = "actix-http"
-version = "3.2.1"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f9ffb6db08c1c3a1f4aef540f1a63193adc73c4fbd40b75a95fc8c5258f6e51"
+checksum = "a5885cb81a0d4d0d322864bea1bb6c2a8144626b4fdc625d4c51eba197e7797a"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -53,10 +53,12 @@ dependencies = [
  "ahash",
  "base64",
  "bitflags",
+ "brotli",
  "bytes",
  "bytestring",
  "derive_more",
  "encoding_rs",
+ "flate2",
  "futures-core",
  "h2",
  "http",
@@ -65,13 +67,24 @@ dependencies = [
  "itoa",
  "language-tags",
  "local-channel",
+ "log",
  "mime",
  "percent-encoding",
  "pin-project-lite",
  "rand",
- "sha1 0.10.1",
+ "sha-1 0.10.0",
  "smallvec 1.9.0",
- "tracing",
+ "zstd",
+]
+
+[[package]]
+name = "actix-macros"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "465a6172cf69b960917811022d8f29bc0b7fa1398bc4f78b3c466673db1213b6"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -162,15 +175,18 @@ checksum = "a27e8fe9ba4ae613c21f677c2cfaf0696c3744030c6f485b34634e502d6bb379"
 dependencies = [
  "actix-codec",
  "actix-http",
+ "actix-macros",
  "actix-router",
  "actix-rt",
  "actix-server",
  "actix-service",
  "actix-utils",
+ "actix-web-codegen",
  "ahash",
  "bytes",
  "bytestring",
  "cfg-if",
+ "cookie",
  "derive_more",
  "encoding_rs",
  "futures-core",
@@ -189,6 +205,18 @@ dependencies = [
  "socket2",
  "time 0.3.11",
  "url",
+]
+
+[[package]]
+name = "actix-web-codegen"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f270541caec49c15673b0af0e9a00143421ad4f118d2df7edcb68b627632f56"
+dependencies = [
+ "actix-router",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -282,6 +310,21 @@ name = "aliasable"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "250f629c0161ad8107cf89319e990051fae62832fd343083bea452d93e2205fd"
+
+[[package]]
+name = "alloc-no-stdlib"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35ef4730490ad1c4eae5c4325b2a95f521d023e5c885853ff7aca0a6a1631db3"
+
+[[package]]
+name = "alloc-stdlib"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "697ed7edc0f1711de49ce108c541623a0af97c6c60b2f6e2b65229847ac843c2"
+dependencies = [
+ "alloc-no-stdlib",
+]
 
 [[package]]
 name = "ambient-authority"
@@ -697,6 +740,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "brotli"
+version = "3.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1a0b1dbcc8ae29329621f8d4f0d835787c1c38bb1401979b49d13b0b305ff68"
+dependencies = [
+ "alloc-no-stdlib",
+ "alloc-stdlib",
+ "brotli-decompressor",
+]
+
+[[package]]
+name = "brotli-decompressor"
+version = "2.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59ad2d4653bf5ca36ae797b1f4bb4dbddb60ce49ca4aed8a2ce4829f60425b80"
+dependencies = [
+ "alloc-no-stdlib",
+ "alloc-stdlib",
+]
+
+[[package]]
 name = "bs58"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -953,6 +1017,17 @@ name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
+name = "cookie"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
+dependencies = [
+ "percent-encoding",
+ "time 0.3.11",
+ "version_check",
+]
 
 [[package]]
 name = "cpp_demangle"
@@ -1380,6 +1455,16 @@ name = "firestorm"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c5f6c2c942da57e2aaaa84b8a521489486f14e75e7fa91dab70aba913975f98"
+
+[[package]]
+name = "flate2"
+version = "1.0.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f82b0f4c27ad9f8bfd1f3208d882da2b09c301bc1c828fd3a00d0216d2fbbff6"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide",
+]
 
 [[package]]
 name = "flume"
@@ -2186,7 +2271,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2221,7 +2306,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2229,14 +2314,25 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
+name = "moonramp-http"
+version = "0.1.6"
+dependencies = [
+ "actix-web",
+ "jsonrpsee",
+ "moonramp-core",
+ "moonramp-entity",
+ "moonramp-migration",
+]
+
+[[package]]
 name = "moonramp-migration"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "clap 3.2.12",
  "moonramp-core",
@@ -2246,14 +2342,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-registry"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-rpc"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "jsonrpsee",
  "moonramp-core",
@@ -3236,23 +3332,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha-1"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "028f48d513f9678cda28f6e4064755b3fbb2af6acd672f2c209b62323f7aea0f"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest 0.10.3",
+]
+
+[[package]]
 name = "sha1"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c1da05c97445caa12d05e848c4a4fcbbea29e748ac28f7e80e9b010392063770"
 dependencies = [
  "sha1_smol",
-]
-
-[[package]]
-name = "sha1"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c77f4e7f65455545c2153c1253d25056825e77ee2533f0e41deb65a93a34852f"
-dependencies = [
- "cfg-if",
- "cpufeatures",
- "digest 0.10.3",
 ]
 
 [[package]]
@@ -3354,7 +3450,7 @@ dependencies = [
  "httparse",
  "log",
  "rand",
- "sha-1",
+ "sha-1 0.9.8",
 ]
 
 [[package]]
@@ -3457,7 +3553,7 @@ dependencies = [
  "rustls 0.19.1",
  "serde",
  "serde_json",
- "sha-1",
+ "sha-1 0.9.8",
  "sha2",
  "smallvec 1.9.0",
  "sqlformat",
@@ -3627,7 +3723,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "sha1 0.6.1",
+ "sha1",
  "syn",
 ]
 
@@ -3784,7 +3880,7 @@ dependencies = [
  "libc",
  "standback",
  "stdweb",
- "time-macros",
+ "time-macros 0.1.1",
  "version_check",
  "winapi",
 ]
@@ -3798,6 +3894,7 @@ dependencies = [
  "itoa",
  "libc",
  "num_threads",
+ "time-macros 0.2.4",
 ]
 
 [[package]]
@@ -3809,6 +3906,12 @@ dependencies = [
  "proc-macro-hack",
  "time-macros-impl",
 ]
+
+[[package]]
+name = "time-macros"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42657b1a6f4d817cda8e7a0ace261fe0cc946cf3a80314390b22cc61ae080792"
 
 [[package]]
 name = "time-macros-impl"

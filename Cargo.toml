@@ -4,6 +4,7 @@ members = [
   "moonramp-core",
   "moonramp-encryption",
   "moonramp-entity",
+  "moonramp-http",
   "moonramp-migration",
   "moonramp-registry",
   "moonramp-rpc",
