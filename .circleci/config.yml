@@ -31,20 +31,20 @@ jobs:
           name: "Build Release"
           command: "cargo build --release"
       - persist_to_workspace:
-          root: /tmp/moonramp/target
+          root: /tmp/moonramp/target/release
           paths:
-            - release/moonramp-migration
+            - moonramp-migration
   github-release:
     executor: github-release-executor
     steps:
       - checkout
       - attach_workspace:
-          at: /tmp/moonramp/bin
+          at: /tmp/moonramp/out
       - run:
           name: "Github Release"
           command: |
             go install github.com/tcnksm/ghr@latest
-            ghr -t ${GITHUB_ACCESS_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} /tmp/moonramp/bin
+            ghr -t ${GITHUB_ACCESS_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} out
   docker-release:
     machine:
       docker_layer_caching: true
