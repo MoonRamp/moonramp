@@ -1,0 +1,16 @@
+[package]
+name = "moonramp-http"
+version = "0.1.6"
+edition = "2021"
+
+[dependencies]
+# Needed for macro usage
+actix-web = { version = "*" }
+# Needed for macro usage
+jsonrpsee = { version = "*" }
+
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib", "http"] }
+moonramp-entity = { version = "^0.1", path = "../moonramp-entity" }
+
+[dev-dependencies]
+moonramp-migration = { version = "^0.1", path = "../moonramp-migration", features = ["testing"] }
