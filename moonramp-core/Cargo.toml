@@ -17,6 +17,7 @@ jsonrpc = ["jsonrpsee"]
 money = ["rusty-money"]
 random = ["rand", "uuid"]
 serialization = ["serde", "serde_json"]
+sql-enable-mysql = ["sea-orm/sqlx-mysql"]
 sql-enable-postgres = ["sea-orm/sqlx-postgres"]
 sql-enable-sqlite = ["sea-orm/sqlx-sqlite"]
 sql = ["sea-orm", "sqlx", "sql-enable-postgres"]
@@ -54,12 +55,12 @@ jsonrpsee = { version = "0.11.0", features = ["macros", "server"], default-featu
 log = { version = "0.4.16", default-features = false, optional = true }
 rand = { version = "0.8.5", default-features = false, optional = true }
 rusty-money = { version = "0.4.1", default-features = false, optional = true }
-sea-orm = { version = "0.7.1", features = ["runtime-tokio-rustls", "macros"], default-features = false, optional = true }
+sea-orm = { version = "0.8.0", features = ["runtime-tokio-rustls", "macros"], default-features = false, optional = true }
 serde = { version = "1.0.117", features = ["derive"], default-features = false, optional = true }
 serde_json = { version = "1.0.59", default-features = false, optional = true }
 sha3 = { version = "0.10.1", default-features = false, optional = true }
 sqlx = { version = "*", features = ["runtime-tokio-rustls"], default-features = false, optional = true }
-tokio = { version = "1.17", features = ["fs", "rt", "sync", "time"], default-features = false, optional = true }
+tokio = { version = "1.17", features = ["fs", "macros", "rt", "sync", "time"], default-features = false, optional = true }
 uuid = { version = "0.8.2", features = ["serde", "v4"], default-features = false, optional = true }
 wasmtime = { version = "0.35.3", optional = true }
 wasmtime-wasi = { version = "0.35.3", optional = true }
