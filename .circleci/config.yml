@@ -72,23 +72,30 @@ workflows:
     jobs:
       - build-dev
   github-release-workflow:
-    when:
-      and:
-        - matches:
-            pattern: ^\d+\.\d+\.\d+$
-            value: << pipeline.git.tag >>
     jobs:
-      - build-release
+      - build-release:
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
       - github-release:
+          requires:
+            - build-release
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
           context:
             - github
   docker-release-workflow:
-    when:
-      and:
-        - matches:
-            pattern: ^\d+\.\d+\.\d+$
-            value: << pipeline.git.tag >>
     jobs:
       - docker-release:
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
           context:
             - dockerhub
