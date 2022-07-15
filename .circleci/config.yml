@@ -31,7 +31,7 @@ jobs:
           name: "Build Release"
           command: "cargo build --release"
       - persist_to_workspace:
-          root: target
+          root: /tmp/moonramp/target
           paths:
             - release/moonramp-migration
   github-release:
@@ -39,12 +39,12 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: ./bin
+          at: /tmp/moonramp/bin
       - run:
           name: "Github Release"
           command: |
             go install github.com/tcnksm/ghr@latest
-            ghr -t ${GITHUB_ACCESS_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./bin
+            ghr -t ${GITHUB_ACCESS_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} /tmp/moonramp/bin
   docker-release:
     machine:
       docker_layer_caching: true
@@ -63,7 +63,7 @@ jobs:
           command: |
               docker login -u moonramp -p $DOCKER_HUB_ACCESS_TOKEN
               docker push moonramp/moonramp:$CIRCLE_SHA1
-              docker push moonramp/moonramp:$MOONRAMP_VERSION
+              docker push moonramp/moonramp:$CIRCLE_TAG
 workflows:
   test-workflow:
     jobs:
