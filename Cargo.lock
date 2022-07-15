@@ -2193,6 +2193,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "moonramp-encryption"
+version = "0.1.0"
+dependencies = [
+ "moonramp-core",
+ "moonramp-entity",
+]
+
+[[package]]
 name = "moonramp-entity"
 version = "0.1.0"
 dependencies = [
