@@ -1,0 +1,24 @@
+[package]
+name = "moonramp-migration"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "moonramp_migration"
+path = "src/lib.rs"
+
+[[bin]]
+name = "moonramp-migration"
+path = "src/main.rs"
+
+[features]
+testing = []
+
+[dependencies]
+clap = { version = "3.1.6", features = ["derive"] }
+sea-orm-migration = { version = "^0.8.0", default-features = false }
+
+
+moonramp-core = { version = "0.1.0", path = "../moonramp-core", features = ["async-core", "sql"] }
+moonramp-entity = { version = "0.1.0", path = "../moonramp-entity" }
+
