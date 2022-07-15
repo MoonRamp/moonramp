@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-wallet"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [features]
@@ -13,5 +13,5 @@ all-currencies = ["bitcoin"]
 default = ["all-currencies"]
 
 [dependencies]
-moonramp-core = { version = "0.1.0", path = "../moonramp-core", features = ["random", "serialization"] }
-moonramp-entity = { version = "0.1.0", path = "../moonramp-entity", optional = true }
+moonramp-core = { version = "0.1.1", path = "../moonramp-core", features = ["random", "serialization"] }
+moonramp-entity = { version = "0.1.1", path = "../moonramp-entity", optional = true }
