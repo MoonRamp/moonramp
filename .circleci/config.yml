@@ -30,7 +30,7 @@ jobs:
           command: "docker build . -t moonramp/moonramp:$CIRCLE_SHA1"
       - run:
           name: "Get Version"
-          command: "export MOONRAMP_VERSION=$(docker run moonramp/moonramp:$CIRCLE_SHA1 -- --version | cut -d' ' -f2)"
+          command: "export MOONRAMP_VERSION=$(docker run moonramp/moonramp:$CIRCLE_SHA1 --version | cut -d' ' -f2)"
       - run:
           name: "Tag Docker Image"
           command: "docker tag moonramp/moonramp:$CIRCLE_SHA1 moonramp/moonramp:$MOONRAMP_VERSION"
