@@ -2159,7 +2159,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2194,7 +2194,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2202,14 +2202,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-migration"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "clap 3.2.12",
  "moonramp-core",
@@ -2219,7 +2219,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
