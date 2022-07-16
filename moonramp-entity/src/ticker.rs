@@ -10,9 +10,7 @@ pub enum Ticker {
     #[sea_orm(string_value = "Bitcoin")]
     BTC,
     #[sea_orm(string_value = "Bitcoin Cash")]
-    BTH,
+    BCH,
     #[sea_orm(string_value = "Ethereum")]
     ETH,
-    #[sea_orm(string_value = "Ethereum Classic")]
-    ETC,
 }
