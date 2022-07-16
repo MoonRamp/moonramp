@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-core"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 
 [lib]
@@ -20,7 +20,7 @@ serialization = ["serde", "serde_json"]
 sql-enable-mysql = ["sea-orm/sqlx-mysql"]
 sql-enable-postgres = ["sea-orm/sqlx-postgres"]
 sql-enable-sqlite = ["sea-orm/sqlx-sqlite"]
-sql = ["sea-orm", "sqlx", "sql-enable-postgres"]
+sql = ["sea-orm", "sql-enable-postgres"]
 time = ["chrono"]
 wasm = ["wasmtime", "wasmtime-wasi"]
 
@@ -59,7 +59,7 @@ sea-orm = { version = "0.8.0", features = ["runtime-tokio-rustls", "macros"], de
 serde = { version = "1.0.117", features = ["derive"], default-features = false, optional = true }
 serde_json = { version = "1.0.59", default-features = false, optional = true }
 sha3 = { version = "0.10.1", default-features = false, optional = true }
-sqlx = { version = "*", features = ["runtime-tokio-rustls"], default-features = false, optional = true }
+#sqlx = { version = "*", features = ["runtime-tokio-rustls"], default-features = false, optional = true }
 tokio = { version = "1.20", features = ["fs", "macros", "rt", "sync", "time"], default-features = false, optional = true }
 uuid = { version = "0.8.2", features = ["serde", "v4"], default-features = false, optional = true }
 wasmtime = { version = "0.35.3", optional = true }

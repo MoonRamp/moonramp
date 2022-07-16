@@ -25,9 +25,8 @@ impl From<Ticker> for ticker::Ticker {
     fn from(t: Ticker) -> ticker::Ticker {
         match t {
             Ticker::BTC => ticker::Ticker::BTC,
-            Ticker::BTH => ticker::Ticker::BTH,
+            Ticker::BCH => ticker::Ticker::BCH,
             Ticker::ETH => ticker::Ticker::ETH,
-            Ticker::ETC => ticker::Ticker::ETC,
         }
     }
 }
@@ -37,9 +36,8 @@ impl From<&Ticker> for ticker::Ticker {
     fn from(t: &Ticker) -> ticker::Ticker {
         match t {
             Ticker::BTC => ticker::Ticker::BTC,
-            Ticker::BTH => ticker::Ticker::BTH,
+            Ticker::BCH => ticker::Ticker::BCH,
             Ticker::ETH => ticker::Ticker::ETH,
-            Ticker::ETC => ticker::Ticker::ETC,
         }
     }
 }
@@ -49,9 +47,8 @@ impl From<ticker::Ticker> for Ticker {
     fn from(t: ticker::Ticker) -> Ticker {
         match t {
             ticker::Ticker::BTC => Ticker::BTC,
-            ticker::Ticker::BTH => Ticker::BTH,
+            ticker::Ticker::BCH => Ticker::BCH,
             ticker::Ticker::ETH => Ticker::ETH,
-            ticker::Ticker::ETC => Ticker::ETC,
         }
     }
 }
@@ -59,12 +56,10 @@ impl From<ticker::Ticker> for Ticker {
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum Currency {
-    BEAN,
     BTC,
-    BTH,
-    ETC,
+    BCH,
     ETH,
-    PAXG,
+    USDT,
     USDC,
     USDP,
 }
@@ -73,12 +68,10 @@ pub enum Currency {
 impl From<Currency> for currency::Currency {
     fn from(c: Currency) -> currency::Currency {
         match c {
-            Currency::BEAN => currency::Currency::BEAN,
             Currency::BTC => currency::Currency::BTC,
-            Currency::BTH => currency::Currency::BTH,
+            Currency::BCH => currency::Currency::BCH,
             Currency::ETH => currency::Currency::ETH,
-            Currency::ETC => currency::Currency::ETC,
-            Currency::PAXG => currency::Currency::PAXG,
+            Currency::USDT => currency::Currency::USDT,
             Currency::USDC => currency::Currency::USDC,
             Currency::USDP => currency::Currency::USDP,
         }
@@ -89,12 +82,10 @@ impl From<Currency> for currency::Currency {
 impl From<&Currency> for currency::Currency {
     fn from(c: &Currency) -> currency::Currency {
         match c {
-            Currency::BEAN => currency::Currency::BEAN,
             Currency::BTC => currency::Currency::BTC,
-            Currency::BTH => currency::Currency::BTH,
+            Currency::BCH => currency::Currency::BCH,
             Currency::ETH => currency::Currency::ETH,
-            Currency::ETC => currency::Currency::ETC,
-            Currency::PAXG => currency::Currency::PAXG,
+            Currency::USDT => currency::Currency::USDT,
             Currency::USDC => currency::Currency::USDC,
             Currency::USDP => currency::Currency::USDP,
         }
@@ -105,12 +96,10 @@ impl From<&Currency> for currency::Currency {
 impl From<currency::Currency> for Currency {
     fn from(c: currency::Currency) -> Currency {
         match c {
-            currency::Currency::BEAN => Currency::BEAN,
             currency::Currency::BTC => Currency::BTC,
-            currency::Currency::BTH => Currency::BTH,
+            currency::Currency::BCH => Currency::BCH,
             currency::Currency::ETH => Currency::ETH,
-            currency::Currency::ETC => Currency::ETC,
-            currency::Currency::PAXG => Currency::PAXG,
+            currency::Currency::USDT => Currency::USDT,
             currency::Currency::USDC => Currency::USDC,
             currency::Currency::USDP => Currency::USDP,
         }

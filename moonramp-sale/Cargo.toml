@@ -1,0 +1,14 @@
+[package]
+name = "moonramp-sale"
+version = "0.1.7"
+edition = "2021"
+
+[features]
+entity = ["moonramp-entity"]
+
+[dependencies]
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["serialization"] }
+moonramp-entity = { version = "^0.1", path = "../moonramp-entity", optional = true }
+moonramp-wallet = { version = "^0.1", path = "../moonramp-wallet" , features = ["entity", "all-currencies"] }
+
+lunar = { version = "0.1.0", path = "../programs/lunar" }
