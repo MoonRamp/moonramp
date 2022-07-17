@@ -1,0 +1,16 @@
+[package]
+name = "moonramp-gateway"
+version = "0.1.8"
+edition = "2021"
+
+[features]
+bitcoin = ["moonramp-core/crypto-currency-bitcoin"]
+
+all-currencies = ["bitcoin"]
+
+default = ["all-currencies"]
+
+[dependencies]
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["http", "serialization", "wasm"] }
+
+lunar = { version = "0.1.0", path = "../programs/lunar" }
