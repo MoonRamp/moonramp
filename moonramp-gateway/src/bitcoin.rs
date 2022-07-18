@@ -19,8 +19,8 @@ use moonramp_core::{
 
 #[derive(Debug, Clone)]
 pub struct BitcoinRpcConfig {
-    uri: String,
-    basic_auth: Option<String>,
+    pub uri: String,
+    pub basic_auth: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

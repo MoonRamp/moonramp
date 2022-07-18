@@ -1,0 +1,13 @@
+[package]
+name = "moonramp-program"
+version = "0.1.9"
+edition = "2021"
+
+[dependencies]
+# Needed for macro usage
+#wasmer = { version = "*" }
+
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib", "wasm"] }
+moonramp-gateway = { version = "^0.1", path = "../moonramp-gateway" }
+
+lunar = { version = "^0.1", path = "../programs/lunar" }
