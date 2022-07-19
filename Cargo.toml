@@ -8,6 +8,7 @@ members = [
   "moonramp-http",
   "moonramp-migration",
   "moonramp-program",
+  "moonramp-program-rpc",
   "moonramp-registry",
   "moonramp-rpc",
   "moonramp-sale",
