@@ -1,0 +1,22 @@
+[package]
+name = "moonramp-wallet-rpc"
+version = "0.1.11"
+edition = "2021"
+
+[dependencies]
+# Needed for macro usage
+actix-web = { version = "*" }
+# Needed for macro usage
+jsonrpsee = { version = "*" }
+
+moonramp-core = { version = "0.1.0", path = "../moonramp-core", features = ["full"] }
+moonramp-encryption = { version = "0.1.0", path = "../moonramp-encryption" }
+moonramp-entity = { version = "0.1.0", path = "../moonramp-entity" }
+moonramp-http = { version = "0.1.0", path = "../moonramp-http" }
+moonramp-registry = { version = "0.1.0", path = "../moonramp-registry" }
+moonramp-rpc = { version = "0.1.0", path = "../moonramp-rpc" }
+moonramp-wallet = { version = "0.1.0", path = "../moonramp-wallet" , features = ["entity", "all-currencies"] }
+
+[dev-dependencies]
+moonramp-core = { version = "0.1.0", path = "../moonramp-core", features = ["full", "sql-enable-sqlite"] }
+moonramp-migration = { version = "0.1.0", path = "../moonramp-migration", features = ["testing"] }

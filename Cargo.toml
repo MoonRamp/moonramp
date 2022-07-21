@@ -13,6 +13,7 @@ members = [
   "moonramp-rpc",
   "moonramp-sale",
   "moonramp-wallet",
+  "moonramp-wallet-rpc",
 ]
 
 exclude = [
