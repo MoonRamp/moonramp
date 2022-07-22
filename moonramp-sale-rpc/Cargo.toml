@@ -1,5 +1,5 @@
 [package]
-name = "moonramp-program-rpc"
+name = "moonramp-sale-rpc"
 version = "0.1.12"
 edition = "2021"
 
@@ -16,9 +16,13 @@ moonramp-http = { version = "^0.1", path = "../moonramp-http" }
 moonramp-program = { version = "^0.1", path = "../moonramp-program" }
 moonramp-registry = { version = "^0.1", path = "../moonramp-registry" }
 moonramp-rpc = { version = "^0.1", path = "../moonramp-rpc" }
+moonramp-sale = { version = "^0.1", path = "../moonramp-sale" }
+moonramp-wallet = { version = "^0.1", path = "../moonramp-wallet" , features = ["entity", "all-currencies"] }
 
 lunar = { version = "^0.1", path = "../programs/lunar" }
 
 [dev-dependencies]
 moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["full", "wasm", "sql-enable-sqlite"] }
+moonramp-encryption = { version = "^0.1", path = "../moonramp-encryption", features = ["testing"] }
+moonramp-entity = { version = "^0.1", path = "../moonramp-entity", features = ["testing"] }
 moonramp-migration = { version = "^0.1", path = "../moonramp-migration", features = ["testing"] }
