@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-rpc"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 
 [dependencies]
@@ -8,4 +8,4 @@ moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib"
 
 [dev-dependencies]
 # Needed for macro usage
-jsonrpsee = { version = "*" }
+jsonrpsee = { version = "0.14.0", features = ["macros", "server"], default-features = false }
