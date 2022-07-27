@@ -13,7 +13,7 @@ use tokio::{
 };
 
 use moonramp_core::{
-    anyhow, async_trait, chrono, log, sea_orm, serde_json, sha3, tokio, Hash, NetworkTunnel,
+    anyhow, async_trait, chrono, log, sea_orm, serde_json, sha3, tokio, Hash,
     NetworkTunnelReceiver, NetworkTunnelSender, NodeId, TunnelName,
 };
 use moonramp_encryption::{
@@ -80,8 +80,6 @@ pub struct SaleRpcImpl {
     master_merchant_id: Arc<String>,
     kek_custodian: Arc<KeyEncryptionKeyCustodian>,
     database: DatabaseConnection,
-    #[allow(dead_code)]
-    internal_tx: NetworkTunnelSender,
 }
 
 impl SaleRpcImpl {
@@ -600,14 +598,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
 pub struct SaleRpcService {
     node_id: NodeId,
-    rx: Arc<
-        RwLock<(
-            NetworkTunnelReceiver,
-            mpsc::Receiver<NetworkTunnel>,
-            NetworkTunnelReceiver,
-        )>,
-    >,
-    private_network_tx: mpsc::Sender<NetworkTunnel>,
+    rx: Arc<RwLock<NetworkTunnelReceiver>>,
     rpc: RpcModule<SaleRpcImpl>,
 }
 
@@ -617,10 +608,7 @@ impl SaleRpcService {
         master_merchant_id: Arc<String>,
         kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
-        private_network_tx: mpsc::Sender<NetworkTunnel>,
-    ) -> anyhow::Result<(mpsc::Sender<NetworkTunnel>, NetworkTunnelSender, Arc<Self>)> {
-        let (internal_tx, internal_rx) = mpsc::channel(32);
-        let (private_tx, private_network_rx) = mpsc::channel(1024);
+    ) -> anyhow::Result<(NetworkTunnelSender, Arc<Self>)> {
         let (public_tx, public_network_rx) = mpsc::channel(1024);
 
         // Sale Rpc
@@ -628,21 +616,14 @@ impl SaleRpcService {
             master_merchant_id,
             kek_custodian,
             database,
-            internal_tx,
         }
         .into_rpc();
 
         Ok((
-            private_tx,
             public_tx,
             Arc::new(SaleRpcService {
                 node_id,
-                rx: Arc::new(RwLock::new((
-                    internal_rx,
-                    private_network_rx,
-                    public_network_rx,
-                ))),
-                private_network_tx,
+                rx: Arc::new(RwLock::new(public_network_rx)),
                 rpc,
             }),
         ))
@@ -663,19 +644,7 @@ impl RpcService<SaleRpcImpl> for SaleRpcService {
         TunnelName::Sale
     }
 
-    fn private_network_tx(&self) -> mpsc::Sender<NetworkTunnel> {
-        self.private_network_tx.clone()
-    }
-
-    fn rx(
-        &self,
-    ) -> Arc<
-        RwLock<(
-            NetworkTunnelReceiver,
-            mpsc::Receiver<NetworkTunnel>,
-            NetworkTunnelReceiver,
-        )>,
-    > {
+    fn rx(&self) -> Arc<RwLock<NetworkTunnelReceiver>> {
         self.rx.clone()
     }
 
@@ -719,7 +688,6 @@ mod tests {
         let kek_custodian = test_kek(&database)
             .await
             .expect("Invalid KeyEncryptionKeyCustodian");
-        let (internal_tx, _internal_rx) = mpsc::channel(1);
 
         let ek = kek_custodian
             .lock(MerchantScopedSecret {
@@ -841,7 +809,6 @@ mod tests {
             master_merchant_id: Arc::new(t.merchant_id.clone()),
             kek_custodian,
             database,
-            internal_tx,
         }
         .into_rpc();
         Ok((t.merchant_id, wallet_hash, invoice_hash, rpc))

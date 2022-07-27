@@ -17,5 +17,9 @@ COPY --from=builder /etc/passwd /etc/passwd
 USER moonramp
 
 WORKDIR /home/moonramp
+COPY --from=builder /opt/moonramp/target/release/moonramp /usr/bin/
+COPY --from=builder /opt/moonramp/target/release/moonramp-keygen /usr/bin/
 COPY --from=builder /opt/moonramp/target/release/moonramp-migration /usr/bin/
-ENTRYPOINT ["moonramp-migration"]
+COPY --from=builder /opt/moonramp/target/release/moonramp-prgm-harness /usr/bin/
+COPY --from=builder /opt/moonramp/target/release/moonrampctl /usr/bin/
+ENTRYPOINT ["moonramp"]

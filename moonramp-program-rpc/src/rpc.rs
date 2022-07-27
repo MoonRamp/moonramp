@@ -10,8 +10,8 @@ use sha3::{Digest, Sha3_256};
 use tokio::sync::{mpsc, RwLock};
 
 use moonramp_core::{
-    anyhow, async_trait, chrono, log, sea_orm, sha3, tokio, Hash, NetworkTunnel,
-    NetworkTunnelReceiver, NetworkTunnelSender, NodeId, TunnelName,
+    anyhow, async_trait, chrono, log, sea_orm, sha3, tokio, Hash, NetworkTunnelReceiver,
+    NetworkTunnelSender, NodeId, TunnelName,
 };
 use moonramp_encryption::{
     EncryptionKeyCustodian, KeyCustodian, KeyEncryptionKeyCustodian, MerchantScopedSecret,
@@ -53,8 +53,6 @@ pub trait ProgramRpc {
 pub struct ProgramRpcImpl {
     kek_custodian: Arc<KeyEncryptionKeyCustodian>,
     database: DatabaseConnection,
-    #[allow(dead_code)]
-    internal_tx: NetworkTunnelSender,
 }
 
 #[async_trait]
@@ -224,14 +222,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
 
 pub struct ProgramRpcService {
     node_id: NodeId,
-    rx: Arc<
-        RwLock<(
-            NetworkTunnelReceiver,
-            mpsc::Receiver<NetworkTunnel>,
-            NetworkTunnelReceiver,
-        )>,
-    >,
-    private_network_tx: mpsc::Sender<NetworkTunnel>,
+    rx: Arc<RwLock<NetworkTunnelReceiver>>,
     rpc: RpcModule<ProgramRpcImpl>,
 }
 
@@ -240,31 +231,21 @@ impl ProgramRpcService {
         node_id: NodeId,
         kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
-        private_network_tx: mpsc::Sender<NetworkTunnel>,
-    ) -> anyhow::Result<(mpsc::Sender<NetworkTunnel>, NetworkTunnelSender, Arc<Self>)> {
-        let (internal_tx, internal_rx) = mpsc::channel(32);
-        let (private_tx, private_network_rx) = mpsc::channel(1024);
+    ) -> anyhow::Result<(NetworkTunnelSender, Arc<Self>)> {
         let (public_tx, public_network_rx) = mpsc::channel(1024);
 
         // Program Rpc
         let rpc = ProgramRpcImpl {
             kek_custodian,
             database,
-            internal_tx,
         }
         .into_rpc();
 
         Ok((
-            private_tx,
             public_tx,
             Arc::new(ProgramRpcService {
                 node_id,
-                rx: Arc::new(RwLock::new((
-                    internal_rx,
-                    private_network_rx,
-                    public_network_rx,
-                ))),
-                private_network_tx,
+                rx: Arc::new(RwLock::new(public_network_rx)),
                 rpc,
             }),
         ))
@@ -285,19 +266,7 @@ impl RpcService<ProgramRpcImpl> for ProgramRpcService {
         TunnelName::Program
     }
 
-    fn private_network_tx(&self) -> mpsc::Sender<NetworkTunnel> {
-        self.private_network_tx.clone()
-    }
-
-    fn rx(
-        &self,
-    ) -> Arc<
-        RwLock<(
-            NetworkTunnelReceiver,
-            mpsc::Receiver<NetworkTunnel>,
-            NetworkTunnelReceiver,
-        )>,
-    > {
+    fn rx(&self) -> Arc<RwLock<NetworkTunnelReceiver>> {
         self.rx.clone()
     }
 
@@ -338,12 +307,10 @@ mod tests {
         let kek_custodian = test_kek(&database)
             .await
             .expect("Invalid KeyEncryptionKeyCustodian");
-        let (internal_tx, _internal_rx) = mpsc::channel(1);
 
         let rpc = ProgramRpcImpl {
             kek_custodian,
             database,
-            internal_tx,
         }
         .into_rpc();
         Ok((t.merchant_id, rpc))

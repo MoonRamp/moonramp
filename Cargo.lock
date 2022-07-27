@@ -107,6 +107,7 @@ version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ea16c295198e958ef31930a6ef37d0fb64e9ca3b6116e6b93a8bdae96ee1000"
 dependencies = [
+ "actix-macros",
  "futures-core",
  "tokio",
 ]
@@ -2290,8 +2291,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "moonramp-bin"
+version = "0.1.13"
+dependencies = [
+ "actix-rt",
+ "clap 3.2.14",
+ "env_logger",
+ "lunar",
+ "moonramp-core",
+ "moonramp-encryption",
+ "moonramp-entity",
+ "moonramp-migration",
+ "moonramp-program-rpc",
+ "moonramp-registry",
+ "moonramp-rpc",
+ "moonramp-sale-rpc",
+ "moonramp-wallet-rpc",
+]
+
+[[package]]
 name = "moonramp-core"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2325,7 +2345,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2333,14 +2353,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-gateway"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2348,7 +2368,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-http"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.15.0",
@@ -2359,7 +2379,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-migration"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "clap 3.2.14",
  "moonramp-core",
@@ -2369,7 +2389,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2378,7 +2398,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-rpc"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2395,14 +2415,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-registry"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-rpc"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "jsonrpsee 0.14.0",
  "moonramp-core",
@@ -2410,7 +2430,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2420,7 +2440,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale-rpc"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2439,7 +2459,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2447,7 +2467,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet-rpc"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
