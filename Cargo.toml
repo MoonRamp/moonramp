@@ -19,4 +19,6 @@ members = [
 ]
 
 exclude = [
+  "programs/default-sale",
+  "programs/test-sale",
 ]
