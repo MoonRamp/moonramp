@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+  "moonramp-bin",
   "moonramp-core",
   "moonramp-encryption",
   "moonramp-entity",
