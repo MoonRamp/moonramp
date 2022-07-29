@@ -20,7 +20,6 @@ pub enum BitcoinGatewayRequest {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum BitcoinGatewayResponse {
-    //ScanTxn { hash: String },
     ScanTxOut(ScanTxOutResult),
 }
 
@@ -50,7 +49,7 @@ impl BitcoinGateway {
 
         if res_ptr == ptr::null_mut() {
             Err(LunarError::Crash(
-                "Call to bitcoin_gateway_scan failed".to_string(),
+                "Call to bitcoin_gateway failed".to_string(),
             ))
         } else {
             let res_json = unsafe {

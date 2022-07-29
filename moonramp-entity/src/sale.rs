@@ -21,7 +21,7 @@ pub struct Model {
     pub network: super::network::Network,
     pub pubkey: String,
     pub address: String,
-    pub amount: i64,
+    pub amount: f64,
     pub confirmations: i64,
     pub cipher: super::cipher::Cipher,
     #[sea_orm(indexed, column_type = "Text")]

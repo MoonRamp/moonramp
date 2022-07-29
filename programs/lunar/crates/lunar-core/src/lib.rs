@@ -49,15 +49,15 @@ pub enum EntryData {
     Invoice {
         wallet: Wallet,
         currency: Currency,
-        amount: u64,
+        amount: f64,
         user_data: Option<Vec<u8>>,
     },
     Sale {
         wallet: Wallet,
         currency: Currency,
-        amount: u64,
+        amount: f64,
         address: String,
-        confirmations: i64,
+        confirmations: u64,
         user_data: Option<Vec<u8>>,
     },
 }
@@ -74,7 +74,7 @@ pub enum ExitData {
     },
     Sale {
         funded: bool,
-        amount: u64,
+        amount: f64,
         user_data: Option<Vec<u8>>,
     },
 }

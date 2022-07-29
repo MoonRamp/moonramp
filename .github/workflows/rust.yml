@@ -1,0 +1,122 @@
+name: Rust CI
+on:
+  pull_request:
+    branches:
+  push:
+    tags:
+    - '[0-9]+.[0-9]+.[0-9]+'
+env:
+  CARGO_TERM_COLOR: "always"
+jobs:
+  test-unit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Format Moonramp
+      run: cargo fmt --check
+    - name: Build Moonramp
+      run: cargo build
+    - name: Test Moonramp
+      run: cargo test
+  test-integration-postgres-bitcoin:
+    runs-on: ubuntu-latest
+    env:
+      BITCOIN_VERSION: "23.0"
+      DB_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      MKEK: "an example very very secret key." # 256 bit key
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup docker-compose
+      run: |
+        docker-compose --file ci/postgres-bitcoin.yml up --force-recreate --detach
+    - name: Install Wasm Tools
+      run: |
+        sudo apt-get update && sudo apt-get install -y clang binaryen wabt
+        rustup target add wasm32-wasi
+    - name: Build Moonramp
+      run: cargo build
+    - name: Build Moonramp Programs
+      run: |
+        cargo build --manifest-path programs/default-sale/Cargo.toml --target wasm32-wasi
+        WASM_BIN=./programs/default-sale/target/wasm32-wasi/debug/moonramp_program_default_sale.wasm
+        wasm-opt -Os -o $WASM_BIN $WASM_BIN
+        echo "WASM_BIN=$WASM_BIN" >> $GITHUB_ENV
+    - name: Setup DB
+      run: |
+        target/debug/moonramp-migration -u $DB_URL migrate
+        MERCHANT_ID=$(target/debug/moonramp-migration -u $DB_URL create-merchant -n Moonramp -a 'The Moon' -e moonramp@proton.me -p 13337774444 | jq -r .id)
+        API_TOKEN=$(target/debug/moonramp-migration -u $DB_URL create-api-token -m $MERCHANT_ID | jq -r .token)
+        echo "MERCHANT_ID=$MERCHANT_ID" >> $GITHUB_ENV
+        echo "API_TOKEN=$API_TOKEN" >> $GITHUB_ENV
+    - name: Start Moonramp Server
+      run: |
+        RUST_BACKTRACE=1 RUST_LOG=moonramp=trace target/debug/moonramp node -u $DB_URL -n moonramp-psql-bitcoin -m $MERCHANT_ID -M "$MKEK" &> moonramp.log &
+        sleep 2
+    - name: Setup Programs
+      run: |
+        target/debug/moonrampctl -a $API_TOKEN program version
+        PROGRAM_HASH=$(target/debug/moonrampctl -a $API_TOKEN program create -n "moonramp-program-default-sale" -v $GITHUB_RUN_ID -P $WASM_BIN | jq -r .result.hash)
+        echo "PROGRAM_HASH=$PROGRAM_HASH" >> $GITHUB_ENV
+    - name: Setup Payee
+      run: |
+        docker exec ci_bitcoin_1 bitcoin-cli -regtest createwallet moonramp
+        PAYEE_ADDRESS=$(docker exec ci_bitcoin_1 bitcoin-cli -regtest getnewaddress)
+        docker exec ci_bitcoin_1 bitcoin-cli -regtest generatetoaddress 101 $PAYEE_ADDRESS
+        echo "PAYEE_ADDRESS=$PAYEE_ADDRESS" >> $GITHUB_ENV
+    - name: Create Bitcoin Invoice
+      run: |
+        WALLET_HASH=$(target/debug/moonrampctl -a $API_TOKEN wallet create -t btc --wallet-type hot | jq -r .result.hash)
+        INVOICE=$(target/debug/moonrampctl -a $API_TOKEN sale invoice -H $WALLET_HASH -c btc -a 0.00001000)
+        INVOICE_HASH=$(echo $INVOICE | jq -r .result.hash)
+        INVOICE_ADDRESS=$(echo $INVOICE | jq -r .result.address)
+        INVOICE_AMOUNT=$(printf '%.8f\n' $(echo $INVOICE | jq -r .result.amount))
+        echo "WALLET_HASH=$WALLET_HASH" >> $GITHUB_ENV
+        echo "INVOICE_HASH=$INVOICE_HASH" >> $GITHUB_ENV
+        echo "INVOICE_ADDRESS=$INVOICE_ADDRESS" >> $GITHUB_ENV
+        echo "INVOICE_AMOUNT=$INVOICE_AMOUNT" >> $GITHUB_ENV
+    - name: Pay Bitcoin Invoice
+      run: |
+        docker exec ci_bitcoin_1 bitcoin-cli -regtest -named sendtoaddress address="$INVOICE_ADDRESS" amount=$INVOICE_AMOUNT fee_rate=1
+        docker exec ci_bitcoin_1 bitcoin-cli -regtest generatetoaddress 1 $PAYEE_ADDRESS
+        target/debug/moonrampctl -a $API_TOKEN sale capture -H $INVOICE_HASH
+    - name: Logs
+      run: |
+        echo "Postgres"
+        docker logs ci_postgres_1
+        echo "Bitcoin"
+        docker logs ci_bitcoin_1
+        echo "Moonramp"
+        cat moonramp.log
+  github-release:
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '>=1.18.0'
+    - name: Install Wasm Tools
+      run: |
+        sudo apt-get update && sudo apt-get install -y clang binaryen wabt
+        rustup target add wasm32-wasi
+    - name: Build Moonramp
+      run: cargo build --release
+    - name: Build Moonramp Programs
+      run: |
+        cargo build --manifest-path programs/default-sale/Cargo.toml --release --target wasm32-wasi
+        WASM_BIN=./programs/default-sale/target/wasm32-wasi/release/moonramp_program_default_sale.wasm
+        wasm-opt -Os -o $WASM_BIN $WASM_BIN
+        echo "WASM_BIN=$WASM_BIN" >> $GITHUB_ENV
+    - name: Prepare Bins
+      run: |
+        mkdir out
+        cp target/release/moonramp out/
+        cp target/release/moonramp-keygen out/
+        cp target/release/moonramp-migration out/
+        cp target/release/moonramp-prgm-harness out/
+        cp target/release/moonrampctl out/
+        cp $WASM_BIN out/
+    - name: Github Release
+      run: |
+        go install github.com/tcnksm/ghr@latest
+        ghr -t ${GITHUB_TOKEN} -u ${GITHUB_ACTOR} -r ${GITHUB_REPOSITORY} -c ${GITHUB_SHA} -delete ${GITHUB_REF_NAME} out

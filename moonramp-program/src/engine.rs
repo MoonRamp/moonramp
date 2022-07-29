@@ -7,7 +7,7 @@ use wasmtime::{Config, Engine, Extern, FuncType, Linker, Module, Store, Trap, Va
 use wasmtime_wasi::{tokio::WasiCtxBuilder, WasiCtx};
 
 use moonramp_core::{anyhow, log, serde_json, tokio, wasmtime, wasmtime_wasi};
-use moonramp_gateway::bitcoin::BitcoinRpcConfig;
+pub use moonramp_gateway::bitcoin::BitcoinRpcConfig;
 
 const TABLE_EXIT_DATA: u32 = 10;
 
@@ -18,7 +18,10 @@ struct State {
 }
 
 impl State {
-    pub fn new(wasm_mod_bytes: &[u8]) -> anyhow::Result<Self> {
+    pub fn new(
+        wasm_mod_bytes: &[u8],
+        bitcoin_gateway_config: BitcoinRpcConfig,
+    ) -> anyhow::Result<Self> {
         let config = State::config();
         let engine = Engine::new(&config)?;
         let module = unsafe { Module::deserialize(&engine, &wasm_mod_bytes)? };
@@ -83,10 +86,6 @@ impl State {
             },
         )?;
 
-        let bitcoin_gateway_config = BitcoinRpcConfig {
-            uri: "http://bitcoin.localhost:9090".to_string(),
-            basic_auth: Some("Yml0Y29pbjpiaXRjb2lu".to_string()),
-        };
         moonramp_gateway::bitcoin::add_to_linker(bitcoin_gateway_config, &mut linker)?;
 
         Ok(State {
@@ -118,8 +117,9 @@ impl Runtime {
         wasm_mod_bytes: &[u8],
         entry_data: lunar::EntryData,
         timeout: Duration,
+        bitcoin_gateway_config: BitcoinRpcConfig,
     ) -> anyhow::Result<lunar::ExitData> {
-        let state = State::new(wasm_mod_bytes)?;
+        let state = State::new(wasm_mod_bytes, bitcoin_gateway_config)?;
 
         let wasi = WasiCtxBuilder::new().inherit_stdout().build();
         let mut store = Store::new(&state.engine, wasi);

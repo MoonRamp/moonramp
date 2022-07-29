@@ -1246,9 +1246,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.1.22"
+version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f877be4f7c9f246b183111634f75baa039715e3f46ce860677d3b19a69fb229c"
+checksum = "cdffe87e1d521a10f9696f833fe502293ea446d7f256c06128293a4119bdf4cb"
 dependencies = [
  "quote",
  "syn",
@@ -1958,9 +1958,9 @@ dependencies = [
 
 [[package]]
 name = "jsonrpsee"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d966710cd10f992b87107c3b54f9301738892cf5692a5730a362957cc927e3c"
+checksum = "8bd0d559d5e679b1ab2f869b486a11182923863b1b3ee8b421763cdd707b783a"
 
 [[package]]
 name = "jsonrpsee-core"
@@ -2156,7 +2156,7 @@ dependencies = [
 
 [[package]]
 name = "lunar"
-version = "0.1.14"
+version = "0.1.16"
 dependencies = [
  "lunar-core",
  "lunar-macro",
@@ -2164,7 +2164,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-core"
-version = "0.1.14"
+version = "0.1.16"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -2173,7 +2173,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-macro"
-version = "0.1.14"
+version = "0.1.16"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2292,7 +2292,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-bin"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "actix-rt",
  "clap 3.2.15",
@@ -2311,7 +2311,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2345,7 +2345,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2353,14 +2353,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-gateway"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2368,10 +2368,10 @@ dependencies = [
 
 [[package]]
 name = "moonramp-http"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "actix-web",
- "jsonrpsee 0.15.0",
+ "jsonrpsee 0.15.1",
  "moonramp-core",
  "moonramp-entity",
  "moonramp-migration",
@@ -2379,7 +2379,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-migration"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "clap 3.2.15",
  "moonramp-core",
@@ -2389,7 +2389,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2398,7 +2398,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-rpc"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2415,14 +2415,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-registry"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-rpc"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "jsonrpsee 0.14.0",
  "moonramp-core",
@@ -2430,7 +2430,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2440,7 +2440,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale-rpc"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2459,7 +2459,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2467,7 +2467,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet-rpc"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
