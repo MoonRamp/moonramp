@@ -71,11 +71,11 @@ impl TryFrom<lunar::ExitData> for Invoice {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub struct Sale {
     pub funded: bool,
-    pub amount: u64,
+    pub amount: f64,
     pub user_data: Option<Vec<u8>>,
 }
 
@@ -145,14 +145,14 @@ mod tests {
     fn test_sale_try_into() {
         let exit_data = lunar::ExitData::Sale {
             funded: true,
-            amount: 1000,
+            amount: 0.00001000,
             user_data: None,
         };
         assert_eq!(
             exit_data.try_into().ok(),
             Some(Sale {
                 funded: true,
-                amount: 1000,
+                amount: 0.00001000,
                 user_data: None,
             })
         );

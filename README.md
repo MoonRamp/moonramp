@@ -71,6 +71,17 @@ git clone git@github.com:MoonRamp/moonramp.git
 cd moonramp && cargo build --release
 ```
 
+#### Step 4
+
+Building programs
+
+*NOTE* MacOS does not ship with a wasm supported version of clang. Please install clang via homebrew and set `CC` and `AR` env vars. For example
+
+```
+PATH="/usr/local/opt/llvm/bin:${PATH}" CC=/usr/local/opt/llvm/bin/clang AR=/usr/local/opt/llvm/bin/llvm-ar cargo [COMMAND]
+```
+
+
 ## Setup guide
 
 ## Donate
@@ -85,3 +96,7 @@ Donations will fund the development and marketing of the project.
 ### Bitcoin (BTC)
 <image width="256" src="./moonramp_bitcoin.jpeg">
 <p>bc1qefwe0jnue2327zjpef8e80ndyt24xjsqgt33ek</p>
+
+### Bitcoin Cash (BCH)
+<image width="256" src="./moonramp_bitcoincash.jpeg">
+<p>qqea0f43hs6qf5fhgy7qycfcukxjuxlyx5patf45zg</p>

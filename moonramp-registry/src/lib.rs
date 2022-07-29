@@ -42,7 +42,11 @@ impl Registry {
     }
     async fn inner_run(&mut self) -> Result<(), Box<dyn Error>> {
         if let Some((response_tx, msg)) = self.registry_rx.recv().await {
-            trace!("Registry received {:?}", msg);
+            trace!(
+                "Registry received {} {} bytes",
+                msg.topic,
+                msg.tunnel_data.len()
+            );
             match msg.topic {
                 TunnelTopic::Public(name) => {
                     if let Some(backend) = self.registry.get(&name) {

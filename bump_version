@@ -1,3 +1,5 @@
 #!/bin/sh
 
-git grep -l "$1" **/Cargo.toml | xargs sed -i '' -e "s/$1/$2/g"
+git grep -l "$1" **/Cargo.toml | xargs sed -i '' -e "s/^version = \"$1\"/version = \"$2\"/g"
+git grep -l "$1" programs/**/Cargo.toml | xargs sed -i '' -e "s/^version = \"$1\"/version = \"$2\"/g"
+cargo update

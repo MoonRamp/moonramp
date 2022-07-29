@@ -20,7 +20,7 @@ use moonramp_encryption::{
     EncryptionKeyCustodian, KeyCustodian, KeyEncryptionKeyCustodian, MerchantScopedSecret,
 };
 use moonramp_entity::{cipher::Cipher, encryption_key, invoice, program, sale, wallet};
-use moonramp_program::Runtime;
+use moonramp_program::{BitcoinRpcConfig, Runtime};
 use moonramp_rpc::{IntoRpcResult, RpcService};
 use moonramp_sale::{Invoice, Sale};
 use moonramp_wallet::Wallet;
@@ -80,6 +80,7 @@ pub struct SaleRpcImpl {
     master_merchant_id: Arc<String>,
     kek_custodian: Arc<KeyEncryptionKeyCustodian>,
     database: DatabaseConnection,
+    bitcoin_gateway_config: BitcoinRpcConfig,
 }
 
 impl SaleRpcImpl {
@@ -270,6 +271,7 @@ impl SaleRpcServer for SaleRpcImpl {
                 user_data: request.user_data,
             },
             tokio::time::Duration::from_millis(55000),
+            self.bitcoin_gateway_config.clone(),
         )
         .await?
         .try_into()
@@ -332,7 +334,7 @@ impl SaleRpcServer for SaleRpcImpl {
             invoice_status: Set(invoice::InvoiceStatus::Pending),
             pubkey: Set(i.pubkey),
             address: Set(i.address),
-            amount: Set(request.amount as i64),
+            amount: Set(request.amount),
             uri: Set(i.uri),
             encryption_key_id: Set(ek_custodian.id()),
             cipher: Set(Cipher::Aes256GcmSiv),
@@ -425,6 +427,10 @@ impl SaleRpcServer for SaleRpcImpl {
             .ok_or(anyhow!("Failed load invoice"))
             .into_rpc_result()?;
 
+        if i.invoice_status == invoice::InvoiceStatus::Funded {
+            Err(anyhow!("Invoice has already been captured")).into_rpc_result()?
+        }
+
         let program_find_start = Instant::now();
 
         let (p, p_ek_custodian) = self
@@ -458,7 +464,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
         let live_w: Wallet = serde_json::from_slice(&wallet_bytes).into_rpc_result()?;
 
-        let confirmations = request.confirmations.unwrap_or(6);
+        let confirmations = request.confirmations.unwrap_or(0);
 
         let program_run_start = Instant::now();
         let s: Sale = Runtime::exec(
@@ -466,12 +472,13 @@ impl SaleRpcServer for SaleRpcImpl {
             lunar::EntryData::Sale {
                 wallet: live_w,
                 currency: i.currency.clone().into(),
-                amount: i.amount as u64,
+                amount: i.amount,
                 address: i.address.clone(),
-                confirmations: confirmations,
+                confirmations: confirmations as u64,
                 user_data: request.user_data,
             },
             tokio::time::Duration::from_millis(55000),
+            self.bitcoin_gateway_config.clone(),
         )
         .await?
         .try_into()
@@ -514,6 +521,11 @@ impl SaleRpcServer for SaleRpcImpl {
 
         if s.funded {
             debug!("Sale {} funded with amount {}", hash, s.amount);
+
+            let mut i: invoice::ActiveModel = i.clone().into();
+            i.updated_at = Set(Utc::now());
+            i.invoice_status = Set(invoice::InvoiceStatus::Funded);
+            i.update(&self.database).await.into_rpc_result()?;
         }
 
         let sale_res: SaleResponse = sale::ActiveModel {
@@ -526,7 +538,7 @@ impl SaleRpcServer for SaleRpcImpl {
             network: Set(i.network),
             pubkey: Set(i.pubkey),
             address: Set(i.address),
-            amount: Set(s.amount as i64),
+            amount: Set(s.amount),
             confirmations: Set(confirmations),
             encryption_key_id: Set(ek_custodian.id()),
             cipher: Set(Cipher::Aes256GcmSiv),
@@ -608,14 +620,21 @@ impl SaleRpcService {
         master_merchant_id: Arc<String>,
         kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
+        bitcoin_rpc_uri: String,
+        bitcoin_rpc_auth: String,
     ) -> anyhow::Result<(NetworkTunnelSender, Arc<Self>)> {
         let (public_tx, public_network_rx) = mpsc::channel(1024);
 
         // Sale Rpc
+        let bitcoin_gateway_config = BitcoinRpcConfig {
+            uri: bitcoin_rpc_uri,
+            basic_auth: Some(bitcoin_rpc_auth),
+        };
         let rpc = SaleRpcImpl {
             master_merchant_id,
             kek_custodian,
             database,
+            bitcoin_gateway_config,
         }
         .into_rpc();
 
@@ -700,7 +719,7 @@ mod tests {
         let ek_custodian =
             EncryptionKeyCustodian::new(kek_custodian.unlock(ek)?.secret.to_vec(), Cipher::Noop)?;
 
-        let data = include_bytes!("tests/fixtures/moonramp-program-default-sale.wasm").to_vec();
+        let data = include_bytes!("tests/fixtures/sale.wasm").to_vec();
 
         let mut hasher = Sha3_256::new();
         hasher.update(&data);
@@ -788,7 +807,7 @@ mod tests {
                 invoice_status: Set(invoice::InvoiceStatus::Pending),
                 pubkey: Set("12345".to_string()),
                 address: Set(address.clone()),
-                amount: Set(1000),
+                amount: Set(0.00001000),
                 uri: Set(format!("bitcoin:{}", address)),
                 encryption_key_id: Set(ek_custodian.id()),
                 cipher: Set(Cipher::Aes256GcmSiv),
@@ -805,10 +824,15 @@ mod tests {
             None
         };
 
+        let bitcoin_gateway_config = BitcoinRpcConfig {
+            uri: "http://localhost:18443".to_string(),
+            basic_auth: None,
+        };
         let rpc = SaleRpcImpl {
             master_merchant_id: Arc::new(t.merchant_id.clone()),
             kek_custodian,
             database,
+            bitcoin_gateway_config,
         }
         .into_rpc();
         Ok((t.merchant_id, wallet_hash, invoice_hash, rpc))
@@ -831,7 +855,7 @@ mod tests {
                             "hash": wallet_hash.to_string(),
                             "uuid": "12345",
                             "currency": "BTC",
-                            "amount": 1000,
+                            "amount": 0.00001000,
                         },
                     },
                     "id": "12345",
@@ -849,10 +873,7 @@ mod tests {
             json_rpc["result"]["ticker"],
             serde_json::Value::String("BTC".to_string())
         );
-        assert_eq!(
-            json_rpc["result"]["amount"],
-            serde_json::Value::Number(1000.into())
-        );
+        assert_eq!(json_rpc["result"]["amount"], 0.00001000,);
         assert_eq!(
             json_rpc["result"]["address"],
             serde_json::Value::String("test_address".to_string())
@@ -907,7 +928,7 @@ mod tests {
                             "hash": wallet_hash.to_string(),
                             "uuid": "12345",
                             "currency": "BTC",
-                            "amount": 1000,
+                            "amount": 0.00001000,
                         },
                     },
                     "id": "12345",
@@ -947,10 +968,7 @@ mod tests {
             json_rpc["result"]["ticker"],
             serde_json::Value::String("BTC".to_string())
         );
-        assert_eq!(
-            json_rpc["result"]["amount"],
-            serde_json::Value::Number(1000.into())
-        );
+        assert_eq!(json_rpc["result"]["amount"], 0.00001000,);
         assert_eq!(
             json_rpc["result"]["address"],
             serde_json::Value::String("test_address".to_string())
@@ -1004,7 +1022,7 @@ mod tests {
                         "request": {
                             "hash": invoice_hash.to_string(),
                             "uuid": "12345",
-                            "amount": 1000,
+                            "amount": 0.00001000,
                         },
                     },
                     "id": "12345",
@@ -1022,10 +1040,7 @@ mod tests {
             json_rpc["result"]["ticker"],
             serde_json::Value::String("BTC".to_string())
         );
-        assert_eq!(
-            json_rpc["result"]["amount"],
-            serde_json::Value::Number(1000.into())
-        );
+        assert_eq!(json_rpc["result"]["amount"], 0.00001000,);
         assert_eq!(
             json_rpc["result"]["address"],
             serde_json::Value::String("test_address".to_string())
@@ -1080,7 +1095,7 @@ mod tests {
                         "request": {
                             "hash": invoice_hash.to_string(),
                             "uuid": "12345",
-                            "amount": 1000,
+                            "amount": 0.00001000,
                         },
                     },
                     "id": "12345",
@@ -1120,10 +1135,7 @@ mod tests {
             json_rpc["result"]["ticker"],
             serde_json::Value::String("BTC".to_string())
         );
-        assert_eq!(
-            json_rpc["result"]["amount"],
-            serde_json::Value::Number(1000.into())
-        );
+        assert_eq!(json_rpc["result"]["amount"], 0.00001000,);
         assert_eq!(
             json_rpc["result"]["address"],
             serde_json::Value::String("test_address".to_string())

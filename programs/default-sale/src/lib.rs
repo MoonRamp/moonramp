@@ -24,11 +24,7 @@ mod program {
                     let (pubkey, address) = bitcoin_wallet
                         .next_addr()
                         .map_err(|err| LunarError::Wallet(err.to_string()))?;
-                    let uri = format!(
-                        "bitcoin:{};version=1.0&amount={}",
-                        address,
-                        amount as f64 / 100_000_000.0,
-                    );
+                    let uri = format!("bitcoin:{};version=1.0&amount={}", address, amount);
                     Ok(ExitData::Invoice {
                         wallet: Wallet::Bitcoin(bitcoin_wallet),
                         pubkey: pubkey.to_string(),
@@ -38,19 +34,31 @@ mod program {
                     })
                 }
                 EntryData::Sale {
-                    address, amount, ..
+                    address,
+                    amount,
+                    confirmations,
+                    ..
                 } => {
                     let bitcoin_gateway = BitcoinGateway::new();
                     loop {
                         match bitcoin_gateway.scan_tx_out(vec![format!("addr({})", address)])? {
                             BitcoinGatewayResponse::ScanTxOut(scan_res) => {
-                                let total_amount = scan_res.total_amount.as_sat();
-                                if total_amount >= amount {
-                                    return Ok(ExitData::Sale {
-                                        funded: true,
-                                        amount: total_amount,
-                                        user_data: None,
-                                    });
+                                let total_amount = scan_res.total_amount.as_btc();
+                                if let Some(current_height) = scan_res.height {
+                                    let mut confirmed = true;
+                                    for unspent in &scan_res.unspents {
+                                        if current_height - unspent.height < confirmations {
+                                            confirmed = false;
+                                            break;
+                                        }
+                                    }
+                                    if total_amount >= amount && confirmed {
+                                        return Ok(ExitData::Sale {
+                                            funded: true,
+                                            amount: total_amount,
+                                            user_data: None,
+                                        });
+                                    }
                                 }
                             }
                         }

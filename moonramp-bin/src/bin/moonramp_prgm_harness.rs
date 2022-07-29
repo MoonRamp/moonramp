@@ -18,7 +18,7 @@ use moonramp_encryption::{
 };
 use moonramp_entity::{key_encryption_key, merchant};
 use moonramp_migration::{Migrator, MigratorTrait};
-use moonramp_program_rpc::Runtime;
+use moonramp_program_rpc::{BitcoinRpcConfig, Runtime};
 use moonramp_wallet_rpc::{BitcoinWallet, Currency, Network, Ticker, Wallet};
 
 #[derive(Parser)]
@@ -93,6 +93,10 @@ async fn main() -> anyhow::Result<()> {
                 )?)
             };
 
+            let bitcoin_gateway_config = BitcoinRpcConfig {
+                uri: "http://localhost:18443".to_string(),
+                basic_auth: None,
+            };
             info!("Loading program data...");
             let data = fs::read(program_path).await?;
             info!("Compiling program...");
@@ -108,10 +112,11 @@ async fn main() -> anyhow::Result<()> {
                     lunar::EntryData::Invoice {
                         wallet: w,
                         currency: Currency::BTC,
-                        amount: 1000,
+                        amount: 0.00001000,
                         user_data: None,
                     },
                     Duration::from_secs(1),
+                    bitcoin_gateway_config.clone(),
                 )
                 .await
                 {

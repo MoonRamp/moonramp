@@ -20,8 +20,7 @@ WORKDIR /opt/moonramp
 COPY . .
 RUN cargo build $artifact_mode
 
-WORKDIR /opt/moonramp/programs/default-sale
-RUN cargo build $artifact_mode --target wasm32-wasi
+RUN cargo build --manifest-path programs/default-sale/Cargo.toml $artifact_mode --target wasm32-wasi
 ENV WASM_BIN=/opt/moonramp/programs/default-sale/target/wasm32-wasi/$artifact_path/moonramp_program_default_sale.wasm
 RUN wasm-opt -Os -o $WASM_BIN $WASM_BIN
 RUN wasm-validate $WASM_BIN
@@ -43,3 +42,4 @@ COPY --from=builder /opt/moonramp/target/$artifact_path/moonrampctl /usr/bin/
 
 COPY --from=builder /opt/moonramp/programs/default-sale/target/wasm32-wasi/$artifact_path/moonramp_program_default_sale.wasm /home/moonramp
 ENTRYPOINT ["moonramp"]
+CMD ["--version"]
