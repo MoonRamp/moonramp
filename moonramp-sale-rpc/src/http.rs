@@ -114,6 +114,7 @@ async fn jsonrpc(
         Some("sale.invoice") => check_roles(&rs, role::Resource::Sale, role::Scope::Write),
         Some("sale.invoiceLookup") => check_roles(&rs, role::Resource::Sale, role::Scope::Read),
         Some("sale.capture") => check_roles(&rs, role::Resource::Sale, role::Scope::Write),
+        Some("sale.lookup") => check_roles(&rs, role::Resource::Sale, role::Scope::Read),
         _ => false,
     };
 
@@ -275,7 +276,7 @@ async fn sale_get(
     let id = Uuid::new_v4().to_simple().to_string();
     let data = json!({
         "jsonrpc": "2.0",
-        "method": "sale.invoiceLookup",
+        "method": "sale.lookup",
         "params": {
             "merchant_id": t.merchant_id,
             "request": {

@@ -1,17 +1,16 @@
-name: Rust CI
+name: Test CI
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 on:
   pull_request:
     branches:
+  push:
+    tags:
+    - '[0-9]+.[0-9]+.[0-9]+'
 env:
   CARGO_TERM_COLOR: "always"
 jobs:
-  docker-dev:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Build Moonramp Docker Image
-      run: |
-        docker build . --build-arg artifact_mode='' --build-arg artifact_path='debug' --tag moonramp/moonramp:${GITHUB_RUN_ID}
   test-unit:
     runs-on: ubuntu-latest
     steps:
@@ -22,17 +21,29 @@ jobs:
       run: cargo build
     - name: Test Moonramp
       run: cargo test
-  test-integration-postgres-bitcoin:
+  test-integration-bitcoin:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        db:
+        - name: "postgres"
+          url: "postgresql://postgres:postgres@localhost:5432/postgres"
+        - name: "sqlite"
+          url: "sqlite://moonramp.db"
     env:
       BITCOIN_VERSION: "23.0"
-      DB_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      DB_URL: ${{ matrix.db.url }}
       MKEK: "an example very very secret key." # 256 bit key
     steps:
     - uses: actions/checkout@v3
-    - name: Setup docker-compose
+    - name: Setup postgres docker-compose
+      if: ${{ matrix.db.name == 'postgres' }}
       run: |
         docker-compose --file ci/postgres-bitcoin.yml up --force-recreate --detach
+    - name: Setup sqlite docker-compose
+      if: ${{ matrix.db.name == 'sqlite' }}
+      run: |
+        docker-compose --file ci/sqlite-bitcoin.yml up --force-recreate --detach
     - name: Install Wasm Tools
       run: |
         sudo apt-get update && sudo apt-get install -y clang binaryen wabt
@@ -47,6 +58,7 @@ jobs:
         echo "WASM_BIN=$WASM_BIN" >> $GITHUB_ENV
     - name: Setup DB
       run: |
+        touch moonramp.db # sqlite
         target/debug/moonramp-migration -u $DB_URL migrate
         MERCHANT_ID=$(target/debug/moonramp-migration -u $DB_URL create-merchant -n Moonramp -a 'The Moon' -e moonramp@proton.me -p 13337774444 | jq -r .id)
         API_TOKEN=$(target/debug/moonramp-migration -u $DB_URL create-api-token -m $MERCHANT_ID | jq -r .token)
@@ -83,11 +95,6 @@ jobs:
         docker exec ci_bitcoin_1 bitcoin-cli -regtest -named sendtoaddress address="$INVOICE_ADDRESS" amount=$INVOICE_AMOUNT fee_rate=1
         docker exec ci_bitcoin_1 bitcoin-cli -regtest generatetoaddress 1 $PAYEE_ADDRESS
         target/debug/moonrampctl -a $API_TOKEN sale capture -H $INVOICE_HASH
-    - name: Logs
+    - name: Moonramp Logs
       run: |
-        echo "Postgres"
-        docker logs ci_postgres_1
-        echo "Bitcoin"
-        docker logs ci_bitcoin_1
-        echo "Moonramp"
         cat moonramp.log
