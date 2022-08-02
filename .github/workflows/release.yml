@@ -55,4 +55,4 @@ jobs:
     - name: Github Release
       run: |
         go install github.com/tcnksm/ghr@latest
-        ghr -t ${{secrets.GITHUB_TOKEN}} -u ${GITHUB_ACTOR} -r ${GITHUB_REPOSITORY} -c ${GITHUB_SHA} -delete ${GITHUB_REF_NAME} out
+        ghr -t ${{secrets.GITHUB_TOKEN}} -u MoonRamp -r moonramp -c ${GITHUB_SHA} -delete ${GITHUB_REF_NAME} out

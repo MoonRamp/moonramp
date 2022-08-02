@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  bitcoin:
+    image: moonramp/bitcoin:0.1.3-v23
+    command: "-chain=regtest"
+    ports:
+    - "18443:18443"

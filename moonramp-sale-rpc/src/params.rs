@@ -108,6 +108,7 @@ pub struct SaleCheckoutRequest {
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase", untagged)]
 pub enum SaleLookupRequest {
     Hash { hash: String },
+    InvoiceHash { invoice_hash: String },
 }
 
 //#[derive(Clone, Debug, Deserialize, Serialize)]

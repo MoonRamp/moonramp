@@ -150,9 +150,14 @@ async fn main() -> anyhow::Result<()> {
                     })
                     .await?;
                 }
-                SaleSubcommand::Lookup { hash } => {
-                    sale.lookup(SaleLookupRequest::Hash { hash }).await?;
-                }
+                SaleSubcommand::Lookup { hash, invoice_hash } => match (hash, invoice_hash) {
+                    (Some(hash), None) => sale.lookup(SaleLookupRequest::Hash { hash }).await?,
+                    (None, Some(invoice_hash)) => {
+                        sale.lookup(SaleLookupRequest::InvoiceHash { invoice_hash })
+                            .await?
+                    }
+                    _ => unreachable!(),
+                },
                 SaleSubcommand::Version {} => {
                     sale.version().await?;
                 }
