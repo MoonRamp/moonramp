@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "anyhow"
-version = "1.0.58"
+version = "1.0.59"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb07d2053ccdbe10e2af2995a2f116c1330396493dc1269f6a91d0ae82e19704"
+checksum = "c91f1f46651137be86f3a2b9a8359f9ab421d04d941c62b5982e1ca21113adf9"
 
 [[package]]
 name = "bech32"
@@ -113,7 +113,7 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "lunar"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "lunar-core",
  "lunar-macro",
@@ -121,7 +121,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-core"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -130,7 +130,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-macro"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -151,7 +151,7 @@ checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "anyhow",
  "bip39",
@@ -166,14 +166,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-test-sale"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "lunar",
 ]
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.16"
+version = "0.1.17"
 dependencies = [
  "moonramp-core",
 ]
@@ -265,18 +265,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.140"
+version = "1.0.141"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc855a42c7967b7c369eb5860f7164ef1f6f81c20c7cc1141f2a604e18723b03"
+checksum = "7af873f2c95b99fcb0bd0fe622a43e29514658873c8ceba88c4cb88833a22500"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.140"
+version = "1.0.141"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f2122636b9fe3b81f1cb25099fcf2d3f542cdb1d45940d56c713158884a05da"
+checksum = "75743a150d003dd863b51dc809bcad0d73f2102c53632f1e954e738192a3413f"
 dependencies = [
  "proc-macro2",
  "quote",

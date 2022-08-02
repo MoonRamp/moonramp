@@ -1,0 +1,58 @@
+name: Release CI
+on:
+  push:
+    tags:
+    - '[0-9]+.[0-9]+.[0-9]+'
+env:
+  CARGO_TERM_COLOR: "always"
+jobs:
+  docker-release:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Moonramp Docker Image
+      run: |
+        docker build . --tag moonramp/moonramp:${GITHUB_RUN_ID}
+    - name: Tag Moonramp Docker Image
+      run: |
+        docker tag moonramp/moonramp:${GITHUB_RUN_ID} moonramp/moonramp:$GITHUB_SHA
+        docker tag moonramp/moonramp:${GITHUB_RUN_ID} moonramp/moonramp:$GITHUB_REF_NAME
+    - name: Push Moonramp Docker Image
+      run: |
+        docker login -u moonramp -p $DOCKER_HUB_ACCESS_TOKEN
+        docker push moonramp/moonramp:$GITHUB_SHA
+        docker push moonramp/moonramp:$GITHUB_REF_NAME
+  github-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '>=1.18.0'
+    - name: Install Wasm Tools
+      run: |
+        sudo apt-get update && sudo apt-get install -y clang binaryen wabt
+        rustup target add wasm32-wasi
+    - name: Build Moonramp
+      run: cargo build --release
+    - name: Build Moonramp Programs
+      run: |
+        cargo build --manifest-path programs/default-sale/Cargo.toml --release --target wasm32-wasi
+        WASM_BIN=./programs/default-sale/target/wasm32-wasi/release/moonramp_program_default_sale.wasm
+        wasm-opt -Os -o $WASM_BIN $WASM_BIN
+        echo "WASM_BIN=$WASM_BIN" >> $GITHUB_ENV
+    - name: Prepare Bins
+      run: |
+        mkdir out
+        cp target/release/moonramp out/
+        cp target/release/moonramp-keygen out/
+        cp target/release/moonramp-migration out/
+        cp target/release/moonramp-prgm-harness out/
+        cp target/release/moonrampctl out/
+        cp $WASM_BIN out/
+    - name: Github Release
+      run: |
+        go install github.com/tcnksm/ghr@latest
+        ghr -t ${{secrets.GITHUB_TOKEN}} -u ${GITHUB_ACTOR} -r ${GITHUB_REPOSITORY} -c ${GITHUB_SHA} -delete ${GITHUB_REF_NAME} out
