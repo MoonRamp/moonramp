@@ -11,8 +11,8 @@
   </p></div>
   
   <div><p>
-    <a href="https://dl.circleci.com/status-badge/redirect/gh/MoonRamp/moonramp/tree/master">
-      <img src="https://dl.circleci.com/status-badge/img/gh/MoonRamp/moonramp/tree/master.svg?style=shield"/>
+    <a href="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml">
+      <img src="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml/badge.svg"/>
     </a>
     <a href="https://github.com/moonramp/moonramp/releases/">
       <img src="https://img.shields.io/github/v/release/moonramp/moonramp"/>

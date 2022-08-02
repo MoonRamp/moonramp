@@ -2,4 +2,14 @@
 
 git grep -l "$1" **/Cargo.toml | xargs sed -i '' -e "s/^version = \"$1\"/version = \"$2\"/g"
 git grep -l "$1" programs/**/Cargo.toml | xargs sed -i '' -e "s/^version = \"$1\"/version = \"$2\"/g"
+git grep -l "$1" programs/lunar/crates/**/Cargo.toml | xargs sed -i '' -e "s/^version = \"$1\"/version = \"$2\"/g"
+
+# Moonramp
 cargo update
+# Lunar
+cargo update --manifest-path=programs/lunar/crates/lunar-core/Cargo.toml
+cargo update --manifest-path=programs/lunar/crates/lunar-macro/Cargo.toml
+cargo update --manifest-path=programs/lunar/Cargo.toml
+# Moonramp Programs
+cargo update --manifest-path=programs/default-sale/Cargo.toml
+cargo update --manifest-path=programs/test-sale/Cargo.toml
