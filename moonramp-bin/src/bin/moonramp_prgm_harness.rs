@@ -94,7 +94,7 @@ async fn main() -> anyhow::Result<()> {
             };
 
             let bitcoin_gateway_config = BitcoinRpcConfig {
-                uri: "http://localhost:18443".to_string(),
+                endpoint: "http://localhost:18443".to_string(),
                 basic_auth: None,
             };
             info!("Loading program data...");

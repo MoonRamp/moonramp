@@ -133,6 +133,8 @@ impl WalletRpcServer for WalletRpcImpl {
     ) -> RpcResult<Option<WalletResponse>> {
         debug!("wallet.lookup {:?}", request);
 
+        // TODO balance lookup
+
         Ok(match request {
             WalletLookupRequest::Hash { hash } => wallet::Entity::find()
                 .filter(
@@ -169,6 +171,9 @@ impl WalletRpcService {
         node_id: NodeId,
         kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
+        _bitcoin_rpc_endpoint: String,
+        _bitcoin_rpc_auth: String,
+        network: Network,
     ) -> anyhow::Result<(NetworkTunnelSender, Arc<Self>)> {
         let (public_tx, public_network_rx) = mpsc::channel(1024);
 
@@ -176,7 +181,7 @@ impl WalletRpcService {
         let rpc = WalletRpcImpl {
             kek_custodian,
             database,
-            network: Network::Regtest,
+            network,
         }
         .into_rpc();
 
@@ -249,7 +254,7 @@ mod tests {
         let rpc = WalletRpcImpl {
             kek_custodian,
             database,
-            network: Network::Testnet,
+            network: Network::Regtest,
         }
         .into_rpc();
         Ok((t.merchant_id, rpc))

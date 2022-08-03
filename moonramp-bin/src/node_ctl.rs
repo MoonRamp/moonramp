@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use log::{debug, error};
+use log::{debug, error, info};
 use sea_orm::{entity::*, query::*, DatabaseConnection};
 
 use moonramp_core::{anyhow, log, sea_orm, tokio, NodeId, TunnelName};
@@ -17,9 +17,10 @@ pub struct NodeCtl {
     program_http_addr: String,
     sale_http_addr: String,
     wallet_http_addr: String,
-    bitcoin_rpc_uri: String,
+    bitcoin_rpc_endpoint: String,
     bitcoin_rpc_auth: String,
     master_merchant_id: Arc<String>,
+    network: moonramp_wallet_rpc::Network,
 }
 
 impl NodeCtl {
@@ -28,11 +29,12 @@ impl NodeCtl {
         program_http_addr: String,
         sale_http_addr: String,
         wallet_http_addr: String,
-        bitcoin_rpc_uri: String,
+        bitcoin_rpc_endpoint: String,
         bitcoin_rpc_auth: String,
         master_merchant_id: String,
         master_key_encryption_key: Vec<u8>,
         db_url: String,
+        network: moonramp_wallet_rpc::Network,
     ) -> anyhow::Result<Self> {
         let database = moonramp_entity::database_connection_pool(&db_url).await?;
 
@@ -63,15 +65,18 @@ impl NodeCtl {
             program_http_addr,
             sale_http_addr,
             wallet_http_addr,
-            bitcoin_rpc_uri,
+            bitcoin_rpc_endpoint,
             bitcoin_rpc_auth,
             master_merchant_id: Arc::new(master_merchant_id),
+            network,
         })
     }
 
     pub async fn run(&mut self) -> anyhow::Result<()> {
         // Internal registry network
         let (registry_tx, mut registry) = moonramp_registry::Registry::new();
+
+        info!("Starting with Network {:?}", self.network);
 
         // Program
         debug!("Creating program service");
@@ -96,8 +101,9 @@ impl NodeCtl {
             self.master_merchant_id.clone(),
             self.kek_custodian.clone(),
             self.database.clone(),
-            self.bitcoin_rpc_uri.clone(),
+            self.bitcoin_rpc_endpoint.clone(),
             self.bitcoin_rpc_auth.clone(),
+            self.network.clone(),
         )?;
         registry.register(TunnelName::Sale, sale_public_tx);
         let sale_http = moonramp_sale_rpc::SaleHttpServer::new(
@@ -113,6 +119,9 @@ impl NodeCtl {
             self.node_id.clone(),
             self.kek_custodian.clone(),
             self.database.clone(),
+            self.bitcoin_rpc_endpoint.clone(),
+            self.bitcoin_rpc_auth.clone(),
+            self.network.clone(),
         )?;
         registry.register(TunnelName::Wallet, wallet_public_tx);
         let wallet_http = moonramp_wallet_rpc::WalletHttpServer::new(

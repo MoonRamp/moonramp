@@ -19,7 +19,7 @@ use moonramp_core::{
 
 #[derive(Debug, Clone)]
 pub struct BitcoinRpcConfig {
-    pub uri: String,
+    pub endpoint: String,
     pub basic_auth: Option<String>,
 }
 
@@ -154,7 +154,7 @@ async fn json_rpc_request<T: for<'a> serde::de::Deserialize<'a>>(
     let json_bytes = serde_json::to_vec(&json_rpc)?;
     let req = Request::builder()
         .method(Method::POST)
-        .uri(&format!("{}", config.uri))
+        .uri(&config.endpoint)
         .header(
             AUTHORIZATION,
             format!(
