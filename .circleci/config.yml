@@ -36,7 +36,11 @@ jobs:
       - persist_to_workspace:
           root: /tmp/moonramp/target/release
           paths:
+            - moonramp
+            - moonramp-keygen
             - moonramp-migration
+            - moonramp-prgm-harness
+            - moonrampctl
   github-release:
     executor: github-release-executor
     steps:

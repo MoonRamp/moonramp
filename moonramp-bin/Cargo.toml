@@ -1,0 +1,37 @@
+[package]
+name = "moonramp-bin"
+version = "0.1.13"
+edition = "2021"
+
+[[bin]]
+name = "moonramp"
+path = "src/bin/moonramp.rs"
+
+[[bin]]
+name = "moonrampctl"
+path = "src/bin/moonramp_ctl.rs"
+
+[[bin]]
+name = "moonramp-keygen"
+path = "src/bin/moonramp_keygen.rs"
+
+[[bin]]
+name = "moonramp-prgm-harness"
+path = "src/bin/moonramp_prgm_harness.rs"
+
+[dependencies]
+clap = { version = "3.1.6", features = ["derive"] }
+env_logger = { version = "*" }
+actix-rt = { version = "*" }
+
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib", "http"] }
+moonramp-encryption = { version = "^0.1", path = "../moonramp-encryption" }
+moonramp-entity = { version = "^0.1", path = "../moonramp-entity" }
+moonramp-migration = { version = "^0.1", path = "../moonramp-migration"  }
+moonramp-program-rpc = { version = "^0.1", path = "../moonramp-program-rpc" }
+moonramp-registry = { version = "^0.1", path = "../moonramp-registry" }
+moonramp-rpc = { version = "^0.1", path = "../moonramp-rpc" }
+moonramp-sale-rpc = { version = "^0.1", path = "../moonramp-sale-rpc" }
+moonramp-wallet-rpc = { version = "^0.1", path = "../moonramp-wallet-rpc" }
+
+lunar = { version = "^0.1", path = "../programs/lunar" }
