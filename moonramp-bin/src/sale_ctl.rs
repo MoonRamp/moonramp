@@ -68,8 +68,10 @@ pub enum SaleSubcommand {
         program: Option<String>,
     },
     Lookup {
-        #[clap(short = 'H', long)]
-        hash: String,
+        #[clap(short = 'H', long, required_unless_present("invoice-hash"))]
+        hash: Option<String>,
+        #[clap(short = 'I', long, required_unless_present("hash"))]
+        invoice_hash: Option<String>,
     },
     Version {},
 }

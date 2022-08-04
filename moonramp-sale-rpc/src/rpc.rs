@@ -428,7 +428,17 @@ impl SaleRpcServer for SaleRpcImpl {
             .into_rpc_result()?;
 
         if i.invoice_status == invoice::InvoiceStatus::Funded {
-            Err(anyhow!("Invoice has already been captured")).into_rpc_result()?
+            txn.rollback().await;
+            return self
+                .lookup(
+                    merchant_id,
+                    SaleLookupRequest::InvoiceHash {
+                        invoice_hash: i.hash.to_string(),
+                    },
+                )
+                .await?
+                .ok_or(anyhow!("Invoice has already been captured but has no sale"))
+                .into_rpc_result();
         }
 
         let program_find_start = Instant::now();
@@ -558,12 +568,21 @@ impl SaleRpcServer for SaleRpcImpl {
         merchant_id: String,
         request: SaleLookupRequest,
     ) -> RpcResult<Option<SaleResponse>> {
-        debug!("sale.invoiceLookup {:?}", request);
+        debug!("sale.lookup {:?}", request);
         let s = match request {
             SaleLookupRequest::Hash { hash } => sale::Entity::find()
                 .filter(
                     Condition::all()
                         .add(sale::Column::Hash.eq(hash))
+                        .add(sale::Column::MerchantId.eq(merchant_id)),
+                )
+                .one(&self.database)
+                .await
+                .into_rpc_result()?,
+            SaleLookupRequest::InvoiceHash { invoice_hash } => sale::Entity::find()
+                .filter(
+                    Condition::all()
+                        .add(sale::Column::InvoiceHash.eq(invoice_hash))
                         .add(sale::Column::MerchantId.eq(merchant_id)),
                 )
                 .one(&self.database)
@@ -1045,6 +1064,31 @@ mod tests {
             json_rpc["result"]["address"],
             serde_json::Value::String("test_address".to_string())
         );
+
+        let result = rpc
+            .raw_json_request(
+                &serde_json::to_string(&json!({
+                    "jsonrpc": "2.0",
+                    "method": "sale.capture",
+                    "params": {
+                        "merchant_id": merchant_id,
+                        "request": {
+                            "hash": invoice_hash.to_string(),
+                            "uuid": "12345",
+                            "amount": 0.00001000,
+                        },
+                    },
+                    "id": "12345",
+                }))
+                .expect("Invalid request"),
+            )
+            .await;
+        assert!(result.is_ok());
+        let (resp, _) = result.expect("Invalid response");
+        let json_rpc: serde_json::Value =
+            serde_json::from_str(&resp).expect("Invalid json response");
+        assert_eq!(json_rpc["error"], serde_json::Value::Null);
+        assert_ne!(json_rpc["result"]["hash"], serde_json::Value::Null);
     }
 
     #[tokio::test]

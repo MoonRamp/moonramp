@@ -1,0 +1,14 @@
+name: Development CI
+on:
+  pull_request:
+    branches:
+env:
+  CARGO_TERM_COLOR: "always"
+jobs:
+  docker-dev:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Moonramp Docker Image
+      run: |
+        docker build . --build-arg artifact_mode='' --build-arg artifact_path='debug' --tag moonramp/moonramp:${GITHUB_RUN_ID}
