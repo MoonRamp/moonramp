@@ -17,26 +17,23 @@ jobs:
           name: "Build Release"
           command: "cargo build --release"
   build-docker-image:
-    docker:
-      - image: docker:17.05.0-ce-git
-        auth:
-          username: moonramp
-          password: $DOCKER_HUB_ACCESS_TOKEN
+    machine:
+      docker_layer_caching: true
     steps:
       - checkout
-      - setup_remote_docker
       - run:
           name: "Build Docker Image"
           command: "docker build . -t moonramp/moonramp:$CIRCLE_SHA1"
       - run:
           name: "Get Version"
-          command: "export MOONRAMP_VERSION=$(docker run moonramp/moonramp:$CIRCLE_SHA1 --version | cut -d' ' -f2)"
+          command: "echo 'export MOONRAMP_VERSION=$(docker run moonramp/moonramp:$CIRCLE_SHA1 --version | cut -d\" \" -f2)' >> $BASH_ENV"
       - run:
           name: "Tag Docker Image"
           command: "docker tag moonramp/moonramp:$CIRCLE_SHA1 moonramp/moonramp:$MOONRAMP_VERSION"
       - run:
           name: "Push Docker Image"
           command: |
+              docker login -u moonramp -p $DOCKER_HUB_ACCESS_TOKEN
               docker push moonramp/moonramp:$CIRCLE_SHA1
               docker push moonramp/moonramp:$MOONRAMP_VERSION
 workflows:
