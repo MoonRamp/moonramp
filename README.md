@@ -5,10 +5,22 @@
 
   <h2>Start accepting crypto payments</h2>
   
-  <p>
+  <div><p>
     Accept payments without fees or 3rd parties for your buisness or personal use today.
     This project is free and open-source software that fully embraces Satoshi's vision of peer-to-peer digital cash.
-  </p>
+  </p></div>
+  
+  <div><p>
+    <a href="https://dl.circleci.com/status-badge/redirect/gh/MoonRamp/moonramp/tree/master">
+      <img src="https://dl.circleci.com/status-badge/img/gh/MoonRamp/moonramp/tree/master.svg?style=shield"/>
+    </a>
+    <a href="https://github.com/moonramp/moonramp/releases/">
+      <img src="https://img.shields.io/github/v/release/moonramp/moonramp"/>
+    </a>
+    <a href="https://github.com/moonramp/moonramp/blob/master/LICENSE">
+      <img src="https://img.shields.io/github/license/moonramp/moonramp"/>
+    </a>
+  </p></div>
 </div>
 
 ## WORK IN PROGRESS
