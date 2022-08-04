@@ -20,7 +20,7 @@ pub struct Model {
     pub invoice_status: InvoiceStatus,
     pub pubkey: String,
     pub address: String,
-    pub amount: i64,
+    pub amount: f64,
     pub uri: String,
     pub cipher: super::cipher::Cipher,
     #[sea_orm(indexed, column_type = "Text")]

@@ -22,7 +22,7 @@ mod program {
                 }),
                 EntryData::Sale { .. } => Ok(ExitData::Sale {
                     funded: true,
-                    amount: 1000,
+                    amount: 0.00001000,
                     user_data: None,
                 }),
                 #[allow(unreachable_patterns)]

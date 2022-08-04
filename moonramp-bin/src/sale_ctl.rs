@@ -45,7 +45,7 @@ pub enum SaleSubcommand {
         currency: Currency,
 
         #[clap(short, long)]
-        amount: u64,
+        amount: f64,
 
         #[clap(short, long)]
         expires_in: Option<i64>,

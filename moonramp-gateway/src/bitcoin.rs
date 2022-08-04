@@ -6,7 +6,7 @@ use hyper::{
     http::header::{AUTHORIZATION, CONTENT_TYPE},
     Body, Client, Method, Request,
 };
-use log::debug;
+use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
@@ -76,17 +76,22 @@ pub fn add_to_linker(config: BitcoinRpcConfig, linker: &mut Linker<WasiCtx>) -> 
 
                     let res = match &req {
                         lunar::gateway::BitcoinGatewayRequest::ScanTxOut(req) => {
-                            let res: JsonRpcOneDotZeroResult<ScanTxOutResult> = json_rpc_request(
-                                &config,
-                                "scantxoutset",
-                                json!({
-                                    "action": "start",
-                                    "scanobjects": req,
-                                }),
-                            )
-                            .await?;
+                            let res: anyhow::Result<JsonRpcOneDotZeroResult<ScanTxOutResult>> =
+                                json_rpc_request(
+                                    &config,
+                                    "scantxoutset",
+                                    json!({
+                                        "action": "start",
+                                        "scanobjects": req,
+                                    }),
+                                )
+                                .await;
+                            trace!("REQUEST {:?}", res);
                             lunar::gateway::BitcoinGatewayResponse::ScanTxOut(
-                                res.inner().map_err(|err| Trap::new(err.to_string()))?,
+                                res?.inner().map_err(|err| {
+                                    debug!("REQUEST ERROR {:?}", err);
+                                    Trap::new(err.to_string())
+                                })?,
                             )
                         }
                     };
@@ -144,11 +149,12 @@ async fn json_rpc_request<T: for<'a> serde::de::Deserialize<'a>>(
         "params": params,
         "id": id,
     });
+    trace!("REQUEST {}", json_rpc);
 
     let json_bytes = serde_json::to_vec(&json_rpc)?;
     let req = Request::builder()
         .method(Method::POST)
-        .uri(&format!("{}/", config.uri))
+        .uri(&format!("{}", config.uri))
         .header(
             AUTHORIZATION,
             format!(
@@ -159,7 +165,9 @@ async fn json_rpc_request<T: for<'a> serde::de::Deserialize<'a>>(
         .header(CONTENT_TYPE, "application/json")
         .body(Body::from(json_bytes))?;
 
+    let res = Client::new().request(req).await?;
+    trace!("RESPONSE {}", res.status());
     Ok(serde_json::from_slice(
-        &hyper::body::to_bytes(Client::new().request(req).await?.into_body()).await?,
+        &hyper::body::to_bytes(res.into_body()).await?,
     )?)
 }

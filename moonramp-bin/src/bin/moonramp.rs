@@ -27,6 +27,12 @@ enum Commands {
         #[clap(short, long, default_value_t = String::from("127.0.0.1:9372"))]
         wallet_http_addr: String,
 
+        #[clap(short = 'b', long, default_value_t = String::from("http://127.0.0.1:18443/"))]
+        bitcoin_rpc_uri: String,
+
+        #[clap(short = 'B', long, default_value_t = String::from("bW9vbnJhbXA6bW9vbnJhbXA="))]
+        bitcoin_rpc_auth: String,
+
         #[clap(short, long)]
         master_merchant_id: String,
 
@@ -53,6 +59,8 @@ async fn main() -> anyhow::Result<()> {
             program_http_addr,
             sale_http_addr,
             wallet_http_addr,
+            bitcoin_rpc_uri,
+            bitcoin_rpc_auth,
             master_merchant_id,
             master_key_encryption_key,
             db_url,
@@ -62,6 +70,8 @@ async fn main() -> anyhow::Result<()> {
                 program_http_addr,
                 sale_http_addr,
                 wallet_http_addr,
+                bitcoin_rpc_uri,
+                bitcoin_rpc_auth,
                 master_merchant_id,
                 master_key_encryption_key.as_bytes().to_vec(),
                 db_url,

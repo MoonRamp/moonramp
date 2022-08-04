@@ -14,9 +14,11 @@ pub struct NodeCtl {
     node_id: NodeId,
     kek_custodian: Arc<KeyEncryptionKeyCustodian>,
     database: DatabaseConnection,
-    wallet_http_addr: String,
-    sale_http_addr: String,
     program_http_addr: String,
+    sale_http_addr: String,
+    wallet_http_addr: String,
+    bitcoin_rpc_uri: String,
+    bitcoin_rpc_auth: String,
     master_merchant_id: Arc<String>,
 }
 
@@ -26,6 +28,8 @@ impl NodeCtl {
         program_http_addr: String,
         sale_http_addr: String,
         wallet_http_addr: String,
+        bitcoin_rpc_uri: String,
+        bitcoin_rpc_auth: String,
         master_merchant_id: String,
         master_key_encryption_key: Vec<u8>,
         db_url: String,
@@ -59,6 +63,8 @@ impl NodeCtl {
             program_http_addr,
             sale_http_addr,
             wallet_http_addr,
+            bitcoin_rpc_uri,
+            bitcoin_rpc_auth,
             master_merchant_id: Arc::new(master_merchant_id),
         })
     }
@@ -90,6 +96,8 @@ impl NodeCtl {
             self.master_merchant_id.clone(),
             self.kek_custodian.clone(),
             self.database.clone(),
+            self.bitcoin_rpc_uri.clone(),
+            self.bitcoin_rpc_auth.clone(),
         )?;
         registry.register(TunnelName::Sale, sale_public_tx);
         let sale_http = moonramp_sale_rpc::SaleHttpServer::new(

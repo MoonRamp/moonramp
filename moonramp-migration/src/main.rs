@@ -9,7 +9,7 @@ use uuid::Uuid;
 //use sea_orm::SqlxSqliteConnector;
 //use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 
-use moonramp_core::{chrono, sea_orm, sha3, tokio, uuid, Hash};
+use moonramp_core::{chrono, sea_orm, serde_json, sha3, tokio, uuid, Hash};
 use moonramp_entity::{api_token, merchant, role};
 use moonramp_migration::{Migrator, MigratorTrait};
 
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
             .insert(&database)
             .await?;
-            println!("{:?}", m);
+            println!("{}", serde_json::to_string(&m)?);
         }
         Commands::CreateApiToken { merchant_id } => {
             let mut hasher = Sha3_256::new();
@@ -145,7 +145,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .await?;
                 }
             }
-            println!("{:?}", t);
+            println!("{}", serde_json::to_string(&t)?);
         }
     }
     Ok(())
