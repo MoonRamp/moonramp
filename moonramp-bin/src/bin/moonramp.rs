@@ -1,9 +1,28 @@
 use clap::{Parser, Subcommand};
 use env_logger::Env;
 use log::trace;
+use serde::{Deserialize, Serialize};
 
 use moonramp_bin::node_ctl::NodeCtl;
-use moonramp_core::{anyhow, log, tokio};
+use moonramp_core::{anyhow, log, serde, tokio};
+
+#[derive(clap::ArgEnum, Clone, Debug, Deserialize, Serialize)]
+#[serde(crate = "moonramp_core::serde")]
+pub enum NetworkOpt {
+    Regtest,
+    Testnet,
+    Mainnet,
+}
+
+impl From<NetworkOpt> for moonramp_wallet_rpc::Network {
+    fn from(val: NetworkOpt) -> moonramp_wallet_rpc::Network {
+        match val {
+            NetworkOpt::Regtest => moonramp_wallet_rpc::Network::Regtest,
+            NetworkOpt::Testnet => moonramp_wallet_rpc::Network::Testnet,
+            NetworkOpt::Mainnet => moonramp_wallet_rpc::Network::Mainnet,
+        }
+    }
+}
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -28,7 +47,7 @@ enum Commands {
         wallet_http_addr: String,
 
         #[clap(short = 'b', long, default_value_t = String::from("http://127.0.0.1:18443/"))]
-        bitcoin_rpc_uri: String,
+        bitcoin_rpc_endpoint: String,
 
         #[clap(short = 'B', long, default_value_t = String::from("bW9vbnJhbXA6bW9vbnJhbXA="))]
         bitcoin_rpc_auth: String,
@@ -39,8 +58,11 @@ enum Commands {
         #[clap(short = 'M', long)]
         master_key_encryption_key: String,
 
-        #[clap(short = 'u', long, default_value_t = String::from("postgresql://root@localhost:26257/defaultdb?sslmode=disable"))]
+        #[clap(short = 'u', long, default_value_t = String::from("postgresql://postgres:postgres@localhost:26257/postgres?sslmode=disable"))]
         db_url: String,
+
+        #[clap(short = 'N', long, arg_enum, default_value_t = NetworkOpt::Mainnet)]
+        network: NetworkOpt,
     },
 }
 
@@ -59,22 +81,24 @@ async fn main() -> anyhow::Result<()> {
             program_http_addr,
             sale_http_addr,
             wallet_http_addr,
-            bitcoin_rpc_uri,
+            bitcoin_rpc_endpoint,
             bitcoin_rpc_auth,
             master_merchant_id,
             master_key_encryption_key,
             db_url,
+            network,
         } => {
             let mut node = NodeCtl::new(
                 node_id.into(),
                 program_http_addr,
                 sale_http_addr,
                 wallet_http_addr,
-                bitcoin_rpc_uri,
+                bitcoin_rpc_endpoint,
                 bitcoin_rpc_auth,
                 master_merchant_id,
                 master_key_encryption_key.as_bytes().to_vec(),
                 db_url,
+                network.into(),
             )
             .await?;
             node.run().await?;

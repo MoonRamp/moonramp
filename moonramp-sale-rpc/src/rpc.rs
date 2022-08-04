@@ -23,7 +23,7 @@ use moonramp_entity::{cipher::Cipher, encryption_key, invoice, program, sale, wa
 use moonramp_program::{BitcoinRpcConfig, Runtime};
 use moonramp_rpc::{IntoRpcResult, RpcService};
 use moonramp_sale::{Invoice, Sale};
-use moonramp_wallet::Wallet;
+use moonramp_wallet::{Network, Wallet};
 
 use crate::params::*;
 
@@ -428,7 +428,7 @@ impl SaleRpcServer for SaleRpcImpl {
             .into_rpc_result()?;
 
         if i.invoice_status == invoice::InvoiceStatus::Funded {
-            txn.rollback().await;
+            txn.rollback().await.into_rpc_result()?;
             return self
                 .lookup(
                     merchant_id,
@@ -639,14 +639,15 @@ impl SaleRpcService {
         master_merchant_id: Arc<String>,
         kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
-        bitcoin_rpc_uri: String,
+        bitcoin_rpc_endpoint: String,
         bitcoin_rpc_auth: String,
+        _network: Network,
     ) -> anyhow::Result<(NetworkTunnelSender, Arc<Self>)> {
         let (public_tx, public_network_rx) = mpsc::channel(1024);
 
         // Sale Rpc
         let bitcoin_gateway_config = BitcoinRpcConfig {
-            uri: bitcoin_rpc_uri,
+            endpoint: bitcoin_rpc_endpoint,
             basic_auth: Some(bitcoin_rpc_auth),
         };
         let rpc = SaleRpcImpl {
@@ -738,7 +739,10 @@ mod tests {
         let ek_custodian =
             EncryptionKeyCustodian::new(kek_custodian.unlock(ek)?.secret.to_vec(), Cipher::Noop)?;
 
-        let data = include_bytes!("tests/fixtures/sale.wasm").to_vec();
+        let data = include_bytes!(
+            "../../programs/test-sale/target/wasm32-wasi/debug/moonramp_program_test_sale.wasm"
+        )
+        .to_vec();
 
         let mut hasher = Sha3_256::new();
         hasher.update(&data);
@@ -844,7 +848,7 @@ mod tests {
         };
 
         let bitcoin_gateway_config = BitcoinRpcConfig {
-            uri: "http://localhost:18443".to_string(),
+            endpoint: "http://localhost:18443".to_string(),
             basic_auth: None,
         };
         let rpc = SaleRpcImpl {

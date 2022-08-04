@@ -29,11 +29,12 @@ FROM scratch
 
 ARG artifact_path="release"
 
-ENV LOGNAME=moonramp
 COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+ENV LOGNAME=moonramp
 USER moonramp
 
-WORKDIR /home/moonramp
+COPY --from=builder --chown=moonramp:moonramp /home/moonramp /home/moonramp
 COPY --from=builder /opt/moonramp/target/$artifact_path/moonramp /usr/bin/
 COPY --from=builder /opt/moonramp/target/$artifact_path/moonramp-keygen /usr/bin/
 COPY --from=builder /opt/moonramp/target/$artifact_path/moonramp-migration /usr/bin/
@@ -41,5 +42,11 @@ COPY --from=builder /opt/moonramp/target/$artifact_path/moonramp-prgm-harness /u
 COPY --from=builder /opt/moonramp/target/$artifact_path/moonrampctl /usr/bin/
 
 COPY --from=builder /opt/moonramp/programs/default-sale/target/wasm32-wasi/$artifact_path/moonramp_program_default_sale.wasm /home/moonramp
+
+EXPOSE 9370
+EXPOSE 9371
+EXPOSE 9372
+
+ENV RUST_LOG=moonramp=info
 ENTRYPOINT ["moonramp"]
 CMD ["--version"]

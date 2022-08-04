@@ -1,6 +1,6 @@
 name: Test CI
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 on:
   pull_request:
@@ -15,10 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Install Wasm Tools
+      run: |
+        sudo apt-get update && sudo apt-get install -y clang binaryen wabt
+        rustup target add wasm32-wasi
     - name: Format Moonramp
       run: cargo fmt --check
     - name: Build Moonramp
       run: cargo build
+    - name: Build Moonramp Programs
+      run: |
+        cargo build --manifest-path programs/test-sale/Cargo.toml --target wasm32-wasi
+        WASM_BIN=./programs/test-sale/target/wasm32-wasi/debug/moonramp_program_test_sale.wasm
+        wasm-opt -Os -o $WASM_BIN $WASM_BIN
     - name: Test Moonramp
       run: cargo test
   test-integration-bitcoin:
@@ -66,7 +75,7 @@ jobs:
         echo "API_TOKEN=$API_TOKEN" >> $GITHUB_ENV
     - name: Start Moonramp Server
       run: |
-        RUST_BACKTRACE=1 RUST_LOG=moonramp=trace target/debug/moonramp node -u $DB_URL -n moonramp-psql-bitcoin -m $MERCHANT_ID -M "$MKEK" &> moonramp.log &
+        RUST_BACKTRACE=1 RUST_LOG=moonramp=trace target/debug/moonramp node -u $DB_URL -n moonramp-psql-bitcoin -m $MERCHANT_ID -M "$MKEK" -N regtest &> moonramp.log &
         sleep 2
     - name: Setup Programs
       run: |

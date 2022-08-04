@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Moonramp Server</h1>
+  <h1>MoonRamp Server</h1>
 
   <image src="./moonramp_icon.png">
 
@@ -14,10 +14,10 @@
     <a href="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml">
       <img src="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml/badge.svg"/>
     </a>
-    <a href="https://github.com/moonramp/moonramp/releases/">
+    <a href="https://github.com/moonramp/moonramp/releases">
       <img src="https://img.shields.io/github/v/release/moonramp/moonramp"/>
     </a>
-    <a href="https://hub.docker.com/repository/docker/moonramp/moonramp">
+    <a href="https://hub.docker.com/r/moonramp/moonramp">
       <img src="https://img.shields.io/docker/v/moonramp/moonramp"/>
     </a>
     <a href="https://github.com/moonramp/moonramp/blob/master/LICENSE">
@@ -42,51 +42,13 @@
 * SQL backend support (Mysql, Postgres, SQLite)
 * Stand-alone reproducable statically linked binaries
 
-## Install
+## Guide
 
-### Download pre-built binaries
-
-https://github.com/MoonRamp/moonramp/releases
-
-### Docker Image
-
-```
-FROM moonramp/moonramp:0.1.0
-```
-
-### Build
-#### Step 1
-
-[Install Rust](https://www.rust-lang.org/)
-
-#### Step 2
-
-```
-git clone git@github.com:MoonRamp/moonramp.git
-```
-
-#### Step 3
-
-```
-cd moonramp && cargo build --release
-```
-
-#### Step 4
-
-Building programs
-
-*NOTE* MacOS does not ship with a wasm supported version of clang. Please install clang via homebrew and set `CC` and `AR` env vars. For example
-
-```
-PATH="/usr/local/opt/llvm/bin:${PATH}" CC=/usr/local/opt/llvm/bin/clang AR=/usr/local/opt/llvm/bin/llvm-ar cargo [COMMAND]
-```
-
-
-## Setup guide
+For setup and deployment information please see the [Guide]()
 
 ## Donate
 
-If you want to contribute to the project you can donate monero or bitcoin.
+If you want to contribute to the project you can donate monero, bitcoin, or bitcoin cash.
 Donations will fund the development and marketing of the project.
 
 ### Monero (XMR)

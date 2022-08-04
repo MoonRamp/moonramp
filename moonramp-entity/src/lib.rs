@@ -12,7 +12,7 @@ pub mod sale;
 pub mod ticker;
 pub mod wallet;
 
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
 use moonramp_core::{anyhow, sea_orm};
 
@@ -32,5 +32,7 @@ use moonramp_core::{anyhow, sea_orm};
 //}
 
 pub async fn database_connection_pool(url: &str) -> anyhow::Result<DatabaseConnection> {
-    Ok(Database::connect(url).await?)
+    let mut opts = ConnectOptions::from(url);
+    opts.max_connections(10);
+    Ok(Database::connect(opts).await?)
 }
