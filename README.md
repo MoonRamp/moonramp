@@ -17,6 +17,9 @@
     <a href="https://github.com/moonramp/moonramp/releases/">
       <img src="https://img.shields.io/github/v/release/moonramp/moonramp"/>
     </a>
+    <a href="https://hub.docker.com/repository/docker/moonramp/moonramp">
+      <img src="https://img.shields.io/docker/v/moonramp/moonramp"/>
+    </a>
     <a href="https://github.com/moonramp/moonramp/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/moonramp/moonramp"/>
     </a>
@@ -76,10 +79,9 @@ If you want to contribute to the project you can donate monero or bitcoin.
 Donations will fund the development and marketing of the project.
 
 ### Monero (XMR)
-
-468ZeZpnUdfXjkzvzt1QBcA5SU1coDg1z7CtKhzixfQabT1zUQt6YivN7XAAGbUzt4i6hXqkNTc82TzAG4FiLag1GK7xPSk
+<image width="256" src="./moonramp_monero.jpeg">
+<p>468ZeZpnUdfXjkzvzt1QBcA5SU1coDg1z7CtKhzixfQabT1zUQt6YivN7XAAGbUzt4i6hXqkNTc82TzAG4FiLag1GK7xPSk</p>
 
 ### Bitcoin (BTC)
-
-bc1qefwe0jnue2327zjpef8e80ndyt24xjsqgt33ek
-
+<image width="256" src="./moonramp_bitcoin.jpeg">
+<p>bc1qefwe0jnue2327zjpef8e80ndyt24xjsqgt33ek</p>
