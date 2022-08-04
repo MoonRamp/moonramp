@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-encryption"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [lib]
@@ -11,5 +11,5 @@ path = "src/lib.rs"
 testing = ["moonramp-entity/testing"]
 
 [dependencies]
-moonramp-core = { version = "0.1.0", path = "../moonramp-core", features = ["lib", "sql"] }
-moonramp-entity = { version = "0.1.0", path = "../moonramp-entity" }
+moonramp-core = { version = "0.1.1", path = "../moonramp-core", features = ["lib", "sql"] }
+moonramp-entity = { version = "0.1.1", path = "../moonramp-entity" }
