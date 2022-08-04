@@ -43,7 +43,7 @@ jobs:
       - run:
           name: "Github Release"
           command: |
-            go get github.com/tcnksm/ghr
+            go install github.com/tcnksm/ghr@latest
             ghr -t ${GITHUB_ACCESS_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./bin
   docker-release:
     machine:
@@ -56,8 +56,8 @@ jobs:
       - run:
           name: "Tag Docker Image"
           command: |
-            docker tag moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID moonramp/moonramp:$CIRCLE_SHA1"
-            docker tag moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID moonramp/moonramp:$CIRCLE_TAG"
+            docker tag moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID moonramp/moonramp:$CIRCLE_SHA1
+            docker tag moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID moonramp/moonramp:$CIRCLE_TAG
       - run:
           name: "Push Docker Image"
           command: |
