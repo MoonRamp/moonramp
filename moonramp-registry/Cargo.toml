@@ -1,0 +1,7 @@
+[package]
+name = "moonramp-registry"
+version = "0.1.5"
+edition = "2021"
+
+[dependencies]
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib"] }
