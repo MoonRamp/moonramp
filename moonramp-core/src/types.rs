@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "async-core")]
 use tokio::sync::{mpsc, oneshot};
 
+/// A user defined unique id for the node
 #[derive(Clone, Debug, StdHash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct NodeId(pub String);
 
@@ -27,13 +28,18 @@ impl From<String> for NodeId {
     }
 }
 
+/// Services that receive messages of channels register via a TunnelName
 #[derive(Clone, Copy, Debug, Eq, StdHash, PartialEq, Serialize, Deserialize)]
 pub enum TunnelName {
-    Plugin,
+    /// moonramp_program
     Program,
+    /// moonramp_sale
     Sale,
-    Test,
+    /// moonramp_wallet
     Wallet,
+    /// Test Only
+    #[cfg(feature = "test")]
+    Test,
 }
 
 impl fmt::Display for TunnelName {
@@ -42,10 +48,14 @@ impl fmt::Display for TunnelName {
     }
 }
 
+/// Indicates how a services is allowed to be routed to
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum TunnelTopic {
+    /// All messages should be dropped
     Drop,
+    /// Only other services can route to a private channel
     Private(TunnelName),
+    /// Anything can route to a public channel
     Public(TunnelName),
 }
 
@@ -64,22 +74,27 @@ impl fmt::Display for TunnelTopic {
 impl From<&str> for TunnelTopic {
     fn from(val: &str) -> TunnelTopic {
         match val {
-            "Private-Plugin" => TunnelTopic::Private(TunnelName::Plugin),
-            "Public-Plugin" => TunnelTopic::Public(TunnelName::Plugin),
+            "Private-Program" => TunnelTopic::Private(TunnelName::Program),
+            "Public-Program" => TunnelTopic::Public(TunnelName::Program),
             "Private-Sale" => TunnelTopic::Private(TunnelName::Sale),
             "Public-Sale" => TunnelTopic::Public(TunnelName::Sale),
-            "Private-Test" => TunnelTopic::Private(TunnelName::Test),
-            "Public-Test" => TunnelTopic::Public(TunnelName::Test),
             "Private-Wallet" => TunnelTopic::Private(TunnelName::Wallet),
             "Public-Wallet" => TunnelTopic::Public(TunnelName::Wallet),
+            #[cfg(feature = "test")]
+            "Private-Test" => TunnelTopic::Private(TunnelName::Program),
+            #[cfg(feature = "test")]
+            "Public-Test" => TunnelTopic::Public(TunnelName::Program),
             _ => TunnelTopic::Drop,
         }
     }
 }
 
+/// The creator of a message
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub enum Sender {
+    /// Another Node
     Node(NodeId),
+    /// An end user
     Addr(String),
 }
 
@@ -98,38 +113,53 @@ impl From<SocketAddr> for Sender {
     }
 }
 
+/// Message strucutre for JsonRpc NetworkTunnel request
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct RpcTunnel {
+    /// Unique id for the Rpc request
     pub uuid: String,
+    /// Rpc request creator
     pub sender: Sender,
+    /// The target message receiver
     pub target: Option<Sender>,
+    /// Json payload
     pub data: serde_json::Value,
 }
 
+/// A generic message with a target topic and bytes payload
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct NetworkTunnel {
+    /// Target topic
     pub topic: TunnelTopic,
+    /// Generic byte payload
     pub tunnel_data: Vec<u8>,
 }
 
+/// tokio::mpsc Network Sender
 #[cfg(feature = "async-core")]
 pub type NetworkTunnelSender = mpsc::Sender<(NetworkTunnelChannel, NetworkTunnel)>;
+/// tokio::mpsc Network Receiver
 #[cfg(feature = "async-core")]
 pub type NetworkTunnelReceiver = mpsc::Receiver<(NetworkTunnelChannel, NetworkTunnel)>;
 
+/// Represents the response for a NetworkTunnel message
 #[cfg(feature = "async-core")]
 #[derive(Debug)]
 pub enum NetworkTunnelChannel {
+    /// Single request will use a Oneshot channel
     Oneshot(oneshot::Sender<NetworkTunnel>),
+    /// Streamed request will use a Mpsc channel
     Mpsc(mpsc::Sender<NetworkTunnel>),
 }
 
+/// Used to represent a 'hash' of data, useful because of its fmt and sea_orm impls
 #[cfg(feature = "crypto")]
 #[derive(Clone, PartialEq, Eq, StdHash, Deserialize, Serialize)]
 pub struct Hash(pub [u8; 32]);
 
 #[cfg(feature = "crypto")]
 impl Hash {
+    /// Create a new empty hash
     pub fn new() -> Self {
         Hash([0; 32])
     }

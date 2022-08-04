@@ -11,15 +11,15 @@ MoonRamp uses [Rust Crypto](https://github.com/RustCrypto).
 
 ## Rotating the Master Key Encryption Key
 
-TODO
+TODO[^mkek_rotation]
 
 ## Rotating the Key Encryption Key
 
-TODO
+TODO[^kek_rotation]
 
 ## Shamir Secret Sharing
 
-TODO: MoonRamp plans to support Shamir secret sharing to constitute a `Master Key Encryption Key` from multiple key shares.
+TODO[^shamir]
 
 ## Encryption Stack
 
@@ -34,3 +34,9 @@ For the most security Merchants should:
 * Enable transparent encryption for your data store
 * Run all network traffic with TLS
 * Utilize cold wallet support for high risk scenarios
+
+[^mkek_rotation]: MoonRamp will support `Master Key Encryption Key` rotation
+
+[^kek_rotation]: MoonRamp will support `Key Encryption Key` rotation
+
+[^shamir]: MoonRamp will support Shamir secret sharing to constitute a `Master Key Encryption Key` from multiple key shares

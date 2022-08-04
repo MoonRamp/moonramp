@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-core"
-version = "0.1.19"
+version = "0.1.20"
 edition = "2021"
 
 [lib]
@@ -30,6 +30,8 @@ full = ["http", "lib", "sql"]
 std = ["anyhow/std", "bip39/std", "bitcoin/std", "bs58/std", "rand/std", "rand/std_rng", "serde/std", "serde_json/std"]
 
 embedded = ["bitcoin/secp-lowmemory"]
+
+test = []
 
 default = ["std"]
 

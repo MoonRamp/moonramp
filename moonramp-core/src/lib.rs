@@ -1,3 +1,7 @@
+#![deny(missing_docs)]
+
+//! moonramp-core re-exports all pacakges shared by other moonramp crates and defines a number of core types.
+
 #[cfg(feature = "http")]
 pub use actix_cors;
 #[cfg(feature = "http")]

@@ -8,7 +8,7 @@ Let's create a new BTC wallet to accept payment from a customer.
 docker exec moonramp moonrampctl -a API_TOKEN wallet create -w hot -t btc
 ```
 
-You should see something like this.
+You should see something like
 
 ```
 {

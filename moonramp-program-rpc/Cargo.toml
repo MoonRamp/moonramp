@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-program-rpc"
-version = "0.1.19"
+version = "0.1.20"
 edition = "2021"
 
 [dependencies]
@@ -20,5 +20,5 @@ moonramp-rpc = { version = "^0.1", path = "../moonramp-rpc" }
 lunar = { version = "^0.1", path = "../programs/lunar" }
 
 [dev-dependencies]
-moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["full", "wasm", "sql-enable-sqlite"] }
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["full", "wasm", "sql-enable-sqlite", "test"] }
 moonramp-migration = { version = "^0.1", path = "../moonramp-migration", features = ["testing"] }

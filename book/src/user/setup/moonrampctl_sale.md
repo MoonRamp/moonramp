@@ -1,12 +1,12 @@
 # Moonrampctl (Sale)
 
-Now it's time to create an invoice and get paid!
+Now it's time to create an invoice and get paid! `WALLET_HASH` is the `hash` field returned from the json blob of the `moonrampctl wallet create` command in the previous section.
 
 ```
 docker exec moonramp moonrampctl -a API_TOKEN sale invoice -H WALLET_HASH -c btc  -a 0.25
 ```
 
-You should see something like:
+You should see something like
 
 ```
 {
@@ -31,7 +31,9 @@ You should see something like:
 }
 ```
 
-The fields `address` and `uri` are of particular note. `address` is a unique one-time address to receive payment. For Bitcoin each call to generate a new invoice will generate a new address for a given wallet. The `uri` field is data that can be handle by a mobile OS url handler ([iOS](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app) [Android](https://developer.android.com/training/app-links/deep-linking))
+You have just created an invoice that expects payment of `0.25 Btc` to the wallet `BvY3SinZbHkbnG1azbR8NcxzX88kVyc8TDzNxYa9TKbB` at the address `bcrt1qhe8apwuv2dsr95yknu826qad3cdxvs323ygc80` within `15 minutes`.
+
+The fields `address` and `uri` are of particular note. `address` is a unique one-time address to receive payment. For Bitcoin each call to generate a new invoice will generate a new address for a given wallet. The `uri` field is data that can be handle by a mobile OS url handler ([iOS](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app), [Android](https://developer.android.com/training/app-links/deep-linking)). Most wallets support these type of uris when scanned as a QR code.
 
 ## Details About MoonRamp's Modeling
 

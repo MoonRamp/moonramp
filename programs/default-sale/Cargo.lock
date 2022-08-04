@@ -113,7 +113,7 @@ checksum = "505e71a4706fa491e9b1b55f51b95d4037d0821ee40131190475f692b35b009b"
 
 [[package]]
 name = "lunar"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "lunar-core",
  "lunar-macro",
@@ -121,7 +121,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-core"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -130,7 +130,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-macro"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -151,7 +151,7 @@ checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "anyhow",
  "bip39",
@@ -166,14 +166,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-default-sale"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "lunar",
 ]
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.19"
+version = "0.1.20"
 dependencies = [
  "moonramp-core",
 ]

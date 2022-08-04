@@ -22,4 +22,20 @@ The api token will be in the `token` field of the json blob returned.
 docker run --rm --name moonramp --link bitcoin -v moonramp:/home/moonramp/db -d moonramp/moonramp:0.1.18 node -u "sqlite://db/moonramp.db" -n example-node-id -m MERCHANT_ID -M "an example very very secret key." -N regtest
 ```
 
+## Verify Servers
+
+```
+docker ps
+```
+
+You should see two docker containers running (`bitcoin`, `moonramp`). The output should look like the following.
+
+```
+CONTAINER ID   IMAGE                        COMMAND                  CREATED         STATUS         PORTS                                                      NAMES
+4bd611af09c6   moonramp/moonramp:0.1.18     "moonramp node -u sq…"   2 minutes ago   Up 2 minutes                                                              moonramp
+633e8855d98d   moonramp/bitcoin:0.1.3-v23   "bitcoind -regtest"      2 minutes ago   Up 2 minutes   8332/tcp, 18332/tcp, 18443/tcp, 38332/tcp                  bitcoin
+```
+
 Congrats! You now have a MoonRamp server running using sqlite as a data store and connected to a bitcoin node in regtest mode.
+
+Continue to the [CLI Section](../moonrampctl.md)

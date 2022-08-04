@@ -1,3 +1,7 @@
+#![deny(missing_docs)]
+
+//! moonramp-http contains helper http structs and methods used by moonramp http servers
+
 use std::{error::Error, fmt};
 
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
@@ -17,12 +21,17 @@ use moonramp_core::{
 };
 use moonramp_entity::{api_token, role};
 
+/// Http Error Codes
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub enum HttpError {
+    /// actix::http::StatusCode::NOT_FOUND 404
     NotFound,
+    /// actix::http::StatusCode::NOT_FOUND 500
     ServerError,
+    /// actix::http::StatusCode::NOT_FOUND 504
     Timeout,
+    /// actix::http::StatusCode::NOT_FOUND 401
     Unauthorized,
 }
 
@@ -55,6 +64,7 @@ impl ResponseError for HttpError {
     }
 }
 
+/// Serializes an incoming json blob into a NetworkTunnel
 pub fn network_tunnel(
     id: &str,
     sender: Sender,
@@ -73,6 +83,7 @@ pub fn network_tunnel(
     })
 }
 
+/// Validates a given role contains a resource scope pair
 pub fn check_roles(roles: &[role::Model], resource: role::Resource, scope: role::Scope) -> bool {
     roles
         .iter()
@@ -83,6 +94,7 @@ pub fn check_roles(roles: &[role::Model], resource: role::Resource, scope: role:
         .is_some()
 }
 
+/// Retrieves the api_token::Model and role::Model from the data store
 pub async fn api_token(
     token: &str,
     database: &DatabaseConnection,
@@ -95,6 +107,7 @@ pub async fn api_token(
         .pop())
 }
 
+/// Sends a request to the registry channel, awaits a response, and deserializes the response into a json blob
 pub async fn await_response(
     log_target: &str,
     timeout: Duration,
