@@ -2218,6 +2218,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "moonramp-wallet"
+version = "0.1.0"
+dependencies = [
+ "moonramp-core",
+ "moonramp-entity",
+]
+
+[[package]]
 name = "more-asserts"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

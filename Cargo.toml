@@ -5,6 +5,7 @@ members = [
   "moonramp-encryption",
   "moonramp-entity",
   "moonramp-migration",
+  "moonramp-wallet",
 ]
 
 exclude = [
