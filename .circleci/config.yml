@@ -68,11 +68,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Install Tools"
-          command: |
-              apt-get install binaryen
-              rustup add target wasm32-wasi
-      - run:
           name: "Build Release"
           command: "cargo build --release"
       - persist_to_workspace:
@@ -103,7 +98,7 @@ jobs:
               WASM_BIN_SIZE=`wc -c $WASM_BIN`
               echo "$WASM_BIN Size: $WASM_BIN_SIZE"
       - persist_to_workspace:
-          root: /tmp/moonramp/programs/default-sale/target/release
+          root: /tmp/moonramp/programs/default-sale/target/wasm32-wasi/release
           paths:
             - moonramp_program_default_sale.wasm
   github-release:
