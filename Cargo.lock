@@ -2149,7 +2149,7 @@ dependencies = [
 
 [[package]]
 name = "lunar"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "lunar-core",
  "lunar-macro",
@@ -2157,7 +2157,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-core"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -2166,7 +2166,7 @@ dependencies = [
 
 [[package]]
 name = "lunar-macro"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2285,7 +2285,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2319,7 +2319,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2327,14 +2327,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-gateway"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2342,7 +2342,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-http"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "actix-web",
  "jsonrpsee",
@@ -2353,7 +2353,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-migration"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "clap 3.2.12",
  "moonramp-core",
@@ -2363,7 +2363,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "lunar",
  "moonramp-core",
@@ -2371,15 +2371,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "moonramp-program-rpc"
+version = "0.1.10"
+dependencies = [
+ "actix-web",
+ "jsonrpsee",
+ "lunar",
+ "moonramp-core",
+ "moonramp-encryption",
+ "moonramp-entity",
+ "moonramp-http",
+ "moonramp-migration",
+ "moonramp-program",
+ "moonramp-registry",
+ "moonramp-rpc",
+]
+
+[[package]]
 name = "moonramp-registry"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-rpc"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "jsonrpsee",
  "moonramp-core",
@@ -2397,7 +2414,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
