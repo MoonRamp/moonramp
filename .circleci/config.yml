@@ -1,35 +1,63 @@
 version: 2.1
-jobs:
-  test-unit:
+executors:
+  build-executor:
     docker:
       - image: cimg/rust:1.62.0
+    working_directory: /tmp/moonramp
+  github-release-executor:
+    docker:
+      - image: cimg/golang:1.8
+    working_directory: /tmp/moonramp
+jobs:
+  test-unit:
+    executor: build-executor
     steps:
       - checkout
       - run:
           name: "Unit Test"
           command: "cargo test"
+  build-dev:
+    executor: build-executor
+    steps:
+      - checkout
+      - run:
+          name: "Build Development"
+          command: "cargo build"
   build-release:
-    docker:
-      - image: cimg/rust:1.62.0
+    executor: build-executor
     steps:
       - checkout
       - run:
           name: "Build Release"
           command: "cargo build --release"
-  build-docker-image:
+      - persist_to_workspace:
+          root: target
+          paths:
+            - release/moonramp-migration
+  github-release:
+    executor: github-release-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./bin
+      - run:
+          name: "Github Release"
+          command: |
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_ACCESS_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./bin
+  docker-release:
     machine:
       docker_layer_caching: true
     steps:
       - checkout
       - run:
           name: "Build Docker Image"
-          command: "docker build . -t moonramp/moonramp:$CIRCLE_SHA1"
-      - run:
-          name: "Get Version"
-          command: "echo 'export MOONRAMP_VERSION=$(docker run moonramp/moonramp:$CIRCLE_SHA1 --version | cut -d\" \" -f2)' >> $BASH_ENV"
+          command: "docker build . -t moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID"
       - run:
           name: "Tag Docker Image"
-          command: "docker tag moonramp/moonramp:$CIRCLE_SHA1 moonramp/moonramp:$MOONRAMP_VERSION"
+          command: |
+            docker tag moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID moonramp/moonramp:$CIRCLE_SHA1"
+            docker tag moonramp/moonramp:$CIRCLE_WORKFLOW_JOB_ID moonramp/moonramp:$CIRCLE_TAG"
       - run:
           name: "Push Docker Image"
           command: |
@@ -40,14 +68,27 @@ workflows:
   test-workflow:
     jobs:
       - test-unit
-  build-release-workflow:
+  build-dev-workflow:
     jobs:
-      - build-release
-  build-docker-image-workflow:
+      - build-dev
+  github-release-workflow:
     when:
       and:
-        - equal: [ master, << pipeline.git.branch >> ]
+        - matches:
+            pattern: ^\d+\.\d+\.\d+$
+            value: << pipeline.git.tag >>
     jobs:
-      - build-docker-image:
+      - build-release
+      - github-release:
+          context:
+            - github
+  docker-release-workflow:
+    when:
+      and:
+        - matches:
+            pattern: ^\d+\.\d+\.\d+$
+            value: << pipeline.git.tag >>
+    jobs:
+      - docker-release:
           context:
             - dockerhub
