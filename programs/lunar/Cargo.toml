@@ -1,0 +1,8 @@
+[package]
+name = "lunar"
+version = "0.1.7"
+edition = "2021"
+
+[dependencies]
+lunar-core = { version = "^0.1", path = "./crates/lunar-core" }
+lunar-macro = { version = "^0.1", path = "./crates/lunar-macro" }

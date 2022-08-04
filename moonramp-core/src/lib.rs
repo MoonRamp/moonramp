@@ -43,8 +43,8 @@ pub use serde;
 pub use serde_json;
 #[cfg(feature = "crypto")]
 pub use sha3;
-#[cfg(feature = "sql")]
-pub use sqlx;
+//#[cfg(feature = "sql")]
+//pub use sqlx;
 #[cfg(feature = "async-core")]
 pub use tokio;
 #[cfg(feature = "random")]

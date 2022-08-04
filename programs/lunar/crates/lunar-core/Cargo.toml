@@ -1,0 +1,10 @@
+[package]
+name = "lunar-core"
+version = "0.1.7"
+edition = "2021"
+
+[dependencies]
+wee_alloc = { version = "0.4.5" }
+
+moonramp-core = { version = "^0.1", path = "../../../../moonramp-core", features = ["embedded", "crypto-currency-bitcoin-rpc", "serialization"] }
+moonramp-wallet = { version = "^0.1", path = "../../../../moonramp-wallet", features = ["all-currencies"] }
