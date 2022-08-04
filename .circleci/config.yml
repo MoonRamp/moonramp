@@ -6,7 +6,7 @@ executors:
     working_directory: /tmp/moonramp
   github-release-executor:
     docker:
-      - image: cimg/golang:1.8
+      - image: cimg/go:1.18.4
     working_directory: /tmp/moonramp
 jobs:
   test-unit:

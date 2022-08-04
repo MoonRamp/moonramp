@@ -1,6 +1,6 @@
 [package]
 name = "moonramp-entity"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [lib]
@@ -11,4 +11,4 @@ path = "src/lib.rs"
 testing = []
 
 [dependencies]
-moonramp-core = { version = "0.1.1", path = "../moonramp-core", features = ["lib", "sql"] }
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib", "sql"] }
