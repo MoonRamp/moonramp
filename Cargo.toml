@@ -12,6 +12,7 @@ members = [
   "moonramp-registry",
   "moonramp-rpc",
   "moonramp-sale",
+  "moonramp-sale-rpc",
   "moonramp-wallet",
   "moonramp-wallet-rpc",
 ]

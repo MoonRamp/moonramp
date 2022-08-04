@@ -1,13 +1,13 @@
 [package]
 name = "moonramp-wallet-rpc"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 
 [dependencies]
 # Needed for macro usage
 actix-web = { version = "*" }
 # Needed for macro usage
-jsonrpsee = { version = "*" }
+jsonrpsee = { version = "0.14.0", features = ["macros", "server"], default-features = false }
 
 moonramp-core = { version = "0.1.0", path = "../moonramp-core", features = ["full"] }
 moonramp-encryption = { version = "0.1.0", path = "../moonramp-encryption" }
