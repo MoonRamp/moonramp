@@ -1,6 +1,10 @@
 name: Docs CI
 on:
+  pull_request:
+    branches:
   push:
+    branches:
+    - 'master'
     tags:
     - '[0-9]+.[0-9]+.[0-9]+'
 env:
@@ -22,9 +26,3 @@ jobs:
       run: |
         cargo doc --target-dir out
         rm -rf out/debug
-    - uses: peaceiris/actions-gh-pages@v3
-      with:
-        deploy_key: ${{ secrets.MOONRAMP_GITHUB_IO_DEPLOY_KEY }}
-        external_repository: MoonRamp/moonramp.github.io
-        publish_branch: master
-        publish_dir: ./out

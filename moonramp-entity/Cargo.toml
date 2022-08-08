@@ -1,7 +1,12 @@
 [package]
 name = "moonramp-entity"
+authors = ["MoonRamp Contributors", "Dionysus <fisted-by-dionysus@proton.me>"]
+homepage = "https://moonramp.github.io"
+repository = "https://github.com/moonramp/moonramp"
+readme = "README.md"
 version = "0.1.20"
 edition = "2021"
+license = "MIT"
 
 [lib]
 name = "moonramp_entity"

@@ -1,6 +1,6 @@
-#[lunar::program(DefaultSale)]
+#[moonramp_lunar::program(DefaultSale)]
 mod program {
-    use lunar::{
+    use moonramp_lunar::{
         gateway::{BitcoinGateway, BitcoinGatewayResponse},
         moonramp_wallet::Wallet,
         EntryData, ExitData, LunarError, Program,

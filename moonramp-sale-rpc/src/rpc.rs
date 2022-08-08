@@ -264,7 +264,7 @@ impl SaleRpcServer for SaleRpcImpl {
         let program_run_start = Instant::now();
         let i: Invoice = Runtime::exec(
             &wasm_mod_bytes,
-            lunar::EntryData::Invoice {
+            moonramp_lunar::EntryData::Invoice {
                 wallet: live_w,
                 currency: request.currency.clone(),
                 amount: request.amount.clone(),
@@ -479,7 +479,7 @@ impl SaleRpcServer for SaleRpcImpl {
         let program_run_start = Instant::now();
         let s: Sale = Runtime::exec(
             &wasm_mod_bytes,
-            lunar::EntryData::Sale {
+            moonramp_lunar::EntryData::Sale {
                 wallet: live_w,
                 currency: i.currency.clone().into(),
                 amount: i.amount,

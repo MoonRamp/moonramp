@@ -3,7 +3,7 @@ use env_logger::Env;
 use log::trace;
 use serde::{Deserialize, Serialize};
 
-use moonramp_bin::node_ctl::NodeCtl;
+use moonramp::node_ctl::NodeCtl;
 use moonramp_core::{anyhow, log, serde, tokio};
 
 #[derive(clap::ArgEnum, Clone, Debug, Deserialize, Serialize)]

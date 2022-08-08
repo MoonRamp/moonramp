@@ -4,9 +4,9 @@ use log::trace;
 use tokio::fs;
 use uuid::Uuid;
 
-use moonramp_bin::program_ctl::{ProgramCtl, ProgramSubcommand};
-use moonramp_bin::sale_ctl::{SaleCtl, SaleSubcommand};
-use moonramp_bin::wallet_ctl::{Ticker, WalletCtl, WalletSubcommand, WalletType};
+use moonramp::program_ctl::{ProgramCtl, ProgramSubcommand};
+use moonramp::sale_ctl::{SaleCtl, SaleSubcommand};
+use moonramp::wallet_ctl::{Ticker, WalletCtl, WalletSubcommand, WalletType};
 use moonramp_core::{actix_rt, anyhow, log, tokio, uuid};
 use moonramp_program_rpc::{ProgramCreateRequest, ProgramLookupRequest, ProgramUpdateRequest};
 use moonramp_sale_rpc::{

@@ -49,11 +49,11 @@ pub struct Invoice {
     pub user_data: Option<Vec<u8>>,
 }
 
-impl TryFrom<lunar::ExitData> for Invoice {
+impl TryFrom<moonramp_lunar::ExitData> for Invoice {
     type Error = anyhow::Error;
-    fn try_from(val: lunar::ExitData) -> anyhow::Result<Invoice> {
+    fn try_from(val: moonramp_lunar::ExitData) -> anyhow::Result<Invoice> {
         match val {
-            lunar::ExitData::Invoice {
+            moonramp_lunar::ExitData::Invoice {
                 wallet,
                 pubkey,
                 address,
@@ -79,11 +79,11 @@ pub struct Sale {
     pub user_data: Option<Vec<u8>>,
 }
 
-impl TryFrom<lunar::ExitData> for Sale {
+impl TryFrom<moonramp_lunar::ExitData> for Sale {
     type Error = anyhow::Error;
-    fn try_from(val: lunar::ExitData) -> anyhow::Result<Sale> {
+    fn try_from(val: moonramp_lunar::ExitData) -> anyhow::Result<Sale> {
         match val {
-            lunar::ExitData::Sale {
+            moonramp_lunar::ExitData::Sale {
                 funded,
                 amount,
                 user_data,
@@ -114,7 +114,7 @@ mod tests {
             )
             .expect("Invalid Wallet"),
         );
-        let exit_data = lunar::ExitData::Invoice {
+        let exit_data = moonramp_lunar::ExitData::Invoice {
             wallet: wallet,
             pubkey: "xpub12345".to_string(),
             address: "12345".to_string(),
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_sale_try_into() {
-        let exit_data = lunar::ExitData::Sale {
+        let exit_data = moonramp_lunar::ExitData::Sale {
             funded: true,
             amount: 0.00001000,
             user_data: None,

@@ -1,7 +1,12 @@
 [package]
-name = "moonramp-bin"
+name = "moonramp"
+authors = ["MoonRamp Contributors", "Dionysus <fisted-by-dionysus@proton.me>"]
+homepage = "https://moonramp.github.io"
+repository = "https://github.com/moonramp/moonramp"
+readme = "README.md"
 version = "0.1.20"
 edition = "2021"
+license = "MIT"
 
 [[bin]]
 name = "moonramp"
@@ -34,4 +39,4 @@ moonramp-rpc = { version = "^0.1", path = "../moonramp-rpc" }
 moonramp-sale-rpc = { version = "^0.1", path = "../moonramp-sale-rpc" }
 moonramp-wallet-rpc = { version = "^0.1", path = "../moonramp-wallet-rpc" }
 
-lunar = { version = "^0.1", path = "../programs/lunar" }
+moonramp-lunar = { version = "^0.1", path = "../programs/lunar" }

@@ -1,6 +1,6 @@
-#[lunar::program(DefaultSale)]
+#[moonramp_lunar::program(DefaultSale)]
 mod program {
-    use lunar::{EntryData, ExitData, LunarError, Program};
+    use moonramp_lunar::{EntryData, ExitData, LunarError, Program};
 
     pub struct DefaultSale {}
 

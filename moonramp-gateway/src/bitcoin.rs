@@ -61,7 +61,7 @@ pub fn add_to_linker(config: BitcoinRpcConfig, linker: &mut Linker<WasiCtx>) -> 
                         .data(&caller)
                         .get(*req_ptr as usize..)
                         .and_then(|arr| arr.get(..*req_len as usize));
-                    let req: lunar::gateway::BitcoinGatewayRequest = match data {
+                    let req: moonramp_lunar::gateway::BitcoinGatewayRequest = match data {
                         Some(data) => match serde_json::from_slice(&data) {
                             Ok(exit_data) => exit_data,
                             Err(err) => {
@@ -75,7 +75,7 @@ pub fn add_to_linker(config: BitcoinRpcConfig, linker: &mut Linker<WasiCtx>) -> 
                     };
 
                     let res = match &req {
-                        lunar::gateway::BitcoinGatewayRequest::ScanTxOut(req) => {
+                        moonramp_lunar::gateway::BitcoinGatewayRequest::ScanTxOut(req) => {
                             let res: anyhow::Result<JsonRpcOneDotZeroResult<ScanTxOutResult>> =
                                 json_rpc_request(
                                     &config,
@@ -87,7 +87,7 @@ pub fn add_to_linker(config: BitcoinRpcConfig, linker: &mut Linker<WasiCtx>) -> 
                                 )
                                 .await;
                             trace!("REQUEST {:?}", res);
-                            lunar::gateway::BitcoinGatewayResponse::ScanTxOut(
+                            moonramp_lunar::gateway::BitcoinGatewayResponse::ScanTxOut(
                                 res?.inner().map_err(|err| {
                                     debug!("REQUEST ERROR {:?}", err);
                                     Trap::new(err.to_string())

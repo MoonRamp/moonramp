@@ -69,7 +69,10 @@ impl State {
                             .data(&caller)
                             .get(*exit_data_ptr as usize..)
                             .and_then(|arr| arr.get(..*exit_data_len as usize));
-                        let prgm_exit: Result<lunar::ExitData, lunar::LunarError> = match data {
+                        let prgm_exit: Result<
+                            moonramp_lunar::ExitData,
+                            moonramp_lunar::LunarError,
+                        > = match data {
                             Some(data) => match serde_json::from_slice(&data) {
                                 Ok(exit_data) => exit_data,
                                 Err(err) => {
@@ -115,10 +118,10 @@ impl Runtime {
 
     pub async fn exec(
         wasm_mod_bytes: &[u8],
-        entry_data: lunar::EntryData,
+        entry_data: moonramp_lunar::EntryData,
         timeout: Duration,
         bitcoin_gateway_config: BitcoinRpcConfig,
-    ) -> anyhow::Result<lunar::ExitData> {
+    ) -> anyhow::Result<moonramp_lunar::ExitData> {
         let state = State::new(wasm_mod_bytes, bitcoin_gateway_config)?;
 
         let wasi = WasiCtxBuilder::new().inherit_stdout().build();
@@ -134,16 +137,16 @@ impl Runtime {
             .get_memory(&mut store, "memory")
             .ok_or(anyhow!("Program does not export memory"))?;
 
-        let lunar_main_fn =
+        let moonramp_lunar_main_fn =
             instance.get_typed_func::<(i32, i32), i32, _>(&mut store, "lunar_main")?;
-        let lunar_alloc_fn =
+        let moonramp_lunar_alloc_fn =
             instance.get_typed_func::<i32, i32, _>(&mut store, "lunar_allocate")?;
-        let _lunar_dealloc_fn =
+        let _moonramp_lunar_dealloc_fn =
             instance.get_typed_func::<(i32, i32), (), _>(&mut store, "lunar_deallocate")?;
 
         let start = Instant::now();
         let entry_data_json = serde_json::to_vec(&entry_data)?;
-        let entry_data_ptr = lunar_alloc_fn
+        let entry_data_ptr = moonramp_lunar_alloc_fn
             .call_async(&mut store, entry_data_json.len() as i32)
             .await?;
 
@@ -169,20 +172,20 @@ impl Runtime {
                 );
                 Err(anyhow!("Program TIMEOUT"))
             }
-            Ok(res) = lunar_main_fn.call_async(&mut store, (entry_data_ptr, entry_data_json.len() as i32)) => {
+            Ok(res) = moonramp_lunar_main_fn.call_async(&mut store, (entry_data_ptr, entry_data_json.len() as i32)) => {
                 debug!(
                     "Program exit code: {:?} {}ms Fuel {}",
                     res,
                     start.elapsed().as_millis(),
                     store.fuel_consumed().unwrap_or(0),
                 );
-                let prgm_exit: Result<lunar::ExitData, lunar::LunarError> = store
+                let prgm_exit: Result<moonramp_lunar::ExitData, moonramp_lunar::LunarError> = store
                     .data_mut()
                     .table()
                     .delete(TABLE_EXIT_DATA)
                     .and_then(|prgm_exit| {
                         prgm_exit
-                            .downcast::<Result<lunar::ExitData, lunar::LunarError>>()
+                            .downcast::<Result<moonramp_lunar::ExitData, moonramp_lunar::LunarError>>()
                             .ok()
                     })
                     .map(|prgm_exit| *prgm_exit)

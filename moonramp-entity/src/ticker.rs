@@ -7,10 +7,14 @@ use moonramp_core::{sea_orm, serde};
 #[sea_orm(rs_type = "String", db_type = "Text", enum_name = "ticker")]
 #[serde(crate = "moonramp_core::serde")]
 pub enum Ticker {
-    #[sea_orm(string_value = "Bitcoin")]
-    BTC,
     #[sea_orm(string_value = "Bitcoin Cash")]
     BCH,
+    #[sea_orm(string_value = "Bitcoin")]
+    BTC,
+    #[sea_orm(string_value = "Ethereum Classic")]
+    ETC,
     #[sea_orm(string_value = "Ethereum")]
     ETH,
+    #[sea_orm(string_value = "Monero")]
+    XMR,
 }

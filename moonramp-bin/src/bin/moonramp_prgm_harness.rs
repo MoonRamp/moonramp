@@ -31,7 +31,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Run {
-        #[clap(short, long, default_value_t = String::from("moonramp-lunar-program"))]
+        #[clap(short, long, default_value_t = String::from("moonramp-moonramp_lunar-program"))]
         master_key_encryption_key: String,
 
         #[clap(short = 'u', long, default_value_t = String::from("sqlite::memory:"))]
@@ -109,7 +109,7 @@ async fn main() -> anyhow::Result<()> {
                 let start = Instant::now();
                 match Runtime::exec(
                     &wasm_mod_bytes,
-                    lunar::EntryData::Invoice {
+                    moonramp_lunar::EntryData::Invoice {
                         wallet: w,
                         currency: Currency::BTC,
                         amount: 0.00001000,

@@ -39,7 +39,7 @@ impl Program {
                 use super::*;
                 use std::{os::raw::{c_uchar, c_void}};
 
-                use lunar::{LunarExitCode, Program, wee_alloc};
+                use moonramp_lunar::{LunarExitCode, Program, wee_alloc};
 
                 #[global_allocator]
                 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -50,17 +50,17 @@ impl Program {
                     size: usize,
                 ) -> i32 {
                     let prgm = #ident::#target::default();
-                    lunar::lunar_core_main(entry_data_ptr, size, prgm)
+                    moonramp_lunar::lunar_core_main(entry_data_ptr, size, prgm)
                 }
 
                 #[no_mangle]
                 pub extern "C" fn lunar_allocate(size: usize) -> *mut c_void {
-                    lunar::lunar_core_allocate(size)
+                    moonramp_lunar::lunar_core_allocate(size)
                 }
 
                 #[no_mangle]
                 pub extern "C" fn lunar_deallocate(ptr: *mut c_void, size: usize) {
-                    lunar::lunar_core_deallocate(ptr, size)
+                    moonramp_lunar::lunar_core_deallocate(ptr, size)
                 }
             }
         }

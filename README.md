@@ -12,7 +12,7 @@
   
   <div><p>
     <a href="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml">
-      <img src="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml/badge.svg"/>
+      <img src="https://github.com/MoonRamp/moonramp/actions/workflows/rust.yml/badge.svg?branch=master"/>
     </a>
     <a href="https://github.com/moonramp/moonramp/releases">
       <img src="https://img.shields.io/github/v/release/moonramp/moonramp"/>
@@ -60,5 +60,9 @@ Donations will fund the development and marketing of the project.
 <p>bc1qefwe0jnue2327zjpef8e80ndyt24xjsqgt33ek</p>
 
 ### Bitcoin Cash (BCH)
+<image width="256" src="./moonramp_bitcoincash.jpeg">
+<p>qqea0f43hs6qf5fhgy7qycfcukxjuxlyx5patf45zg</p>
+
+### Ethereum (ETH)
 <image width="256" src="./moonramp_bitcoincash.jpeg">
 <p>qqea0f43hs6qf5fhgy7qycfcukxjuxlyx5patf45zg</p>

@@ -2,31 +2,41 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "bitcoin")]
 use moonramp_core::bitcoin;
+#[cfg(feature = "monero")]
+use moonramp_core::monero;
 use moonramp_core::{anyhow, serde};
 #[cfg(feature = "entity")]
 use moonramp_entity::{currency, network, ticker, wallet};
 
 #[cfg(feature = "bitcoin")]
 mod bitcoin_wallet;
-
 #[cfg(feature = "bitcoin")]
 pub use bitcoin_wallet::*;
+
+#[cfg(feature = "monero")]
+mod monero_wallet;
+#[cfg(feature = "monero")]
+pub use monero_wallet::*;
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum Ticker {
-    BTC,
     BCH,
+    BTC,
+    ETC,
     ETH,
+    XMR,
 }
 
 #[cfg(feature = "entity")]
 impl From<Ticker> for ticker::Ticker {
     fn from(t: Ticker) -> ticker::Ticker {
         match t {
-            Ticker::BTC => ticker::Ticker::BTC,
             Ticker::BCH => ticker::Ticker::BCH,
+            Ticker::BTC => ticker::Ticker::BTC,
+            Ticker::ETC => ticker::Ticker::ETC,
             Ticker::ETH => ticker::Ticker::ETH,
+            Ticker::XMR => ticker::Ticker::XMR,
         }
     }
 }
@@ -35,9 +45,11 @@ impl From<Ticker> for ticker::Ticker {
 impl From<&Ticker> for ticker::Ticker {
     fn from(t: &Ticker) -> ticker::Ticker {
         match t {
-            Ticker::BTC => ticker::Ticker::BTC,
             Ticker::BCH => ticker::Ticker::BCH,
+            Ticker::BTC => ticker::Ticker::BTC,
+            Ticker::ETC => ticker::Ticker::ETC,
             Ticker::ETH => ticker::Ticker::ETH,
+            Ticker::XMR => ticker::Ticker::XMR,
         }
     }
 }
@@ -46,9 +58,11 @@ impl From<&Ticker> for ticker::Ticker {
 impl From<ticker::Ticker> for Ticker {
     fn from(t: ticker::Ticker) -> Ticker {
         match t {
-            ticker::Ticker::BTC => Ticker::BTC,
             ticker::Ticker::BCH => Ticker::BCH,
+            ticker::Ticker::BTC => Ticker::BTC,
+            ticker::Ticker::ETC => Ticker::ETC,
             ticker::Ticker::ETH => Ticker::ETH,
+            ticker::Ticker::XMR => Ticker::XMR,
         }
     }
 }
@@ -56,24 +70,28 @@ impl From<ticker::Ticker> for Ticker {
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum Currency {
-    BTC,
     BCH,
+    BTC,
+    ETC,
     ETH,
-    USDT,
     USDC,
     USDP,
+    USDT,
+    XMR,
 }
 
 #[cfg(feature = "entity")]
 impl From<Currency> for currency::Currency {
     fn from(c: Currency) -> currency::Currency {
         match c {
-            Currency::BTC => currency::Currency::BTC,
             Currency::BCH => currency::Currency::BCH,
+            Currency::BTC => currency::Currency::BTC,
+            Currency::ETC => currency::Currency::ETC,
             Currency::ETH => currency::Currency::ETH,
-            Currency::USDT => currency::Currency::USDT,
             Currency::USDC => currency::Currency::USDC,
             Currency::USDP => currency::Currency::USDP,
+            Currency::USDT => currency::Currency::USDT,
+            Currency::XMR => currency::Currency::XMR,
         }
     }
 }
@@ -82,12 +100,14 @@ impl From<Currency> for currency::Currency {
 impl From<&Currency> for currency::Currency {
     fn from(c: &Currency) -> currency::Currency {
         match c {
-            Currency::BTC => currency::Currency::BTC,
             Currency::BCH => currency::Currency::BCH,
+            Currency::BTC => currency::Currency::BTC,
+            Currency::ETC => currency::Currency::ETC,
             Currency::ETH => currency::Currency::ETH,
-            Currency::USDT => currency::Currency::USDT,
             Currency::USDC => currency::Currency::USDC,
             Currency::USDP => currency::Currency::USDP,
+            Currency::USDT => currency::Currency::USDT,
+            Currency::XMR => currency::Currency::XMR,
         }
     }
 }
@@ -96,12 +116,14 @@ impl From<&Currency> for currency::Currency {
 impl From<currency::Currency> for Currency {
     fn from(c: currency::Currency) -> Currency {
         match c {
-            currency::Currency::BTC => Currency::BTC,
             currency::Currency::BCH => Currency::BCH,
+            currency::Currency::BTC => Currency::BTC,
+            currency::Currency::ETC => Currency::ETC,
             currency::Currency::ETH => Currency::ETH,
-            currency::Currency::USDT => Currency::USDT,
             currency::Currency::USDC => Currency::USDC,
             currency::Currency::USDP => Currency::USDP,
+            currency::Currency::USDT => Currency::USDT,
+            currency::Currency::XMR => Currency::XMR,
         }
     }
 }

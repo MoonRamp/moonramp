@@ -1,7 +1,12 @@
 [package]
 name = "moonramp-gateway"
+authors = ["MoonRamp Contributors", "Dionysus <fisted-by-dionysus@proton.me>"]
+homepage = "https://moonramp.github.io"
+repository = "https://github.com/moonramp/moonramp"
+readme = "README.md"
 version = "0.1.20"
 edition = "2021"
+license = "MIT"
 
 [features]
 bitcoin = ["moonramp-core/crypto-currency-bitcoin"]
@@ -13,4 +18,4 @@ default = ["all-currencies"]
 [dependencies]
 moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["http", "serialization", "wasm"] }
 
-lunar = { version = "0.1.0", path = "../programs/lunar" }
+moonramp-lunar = { version = "0.1.0", path = "../programs/lunar" }

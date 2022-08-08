@@ -37,6 +37,8 @@ pub use hyper;
 pub use jsonrpsee;
 #[cfg(feature = "lib")]
 pub use log;
+#[cfg(feature = "crypto-currency-monero")]
+pub use monero;
 #[cfg(feature = "random")]
 pub use rand;
 #[cfg(feature = "sql")]
