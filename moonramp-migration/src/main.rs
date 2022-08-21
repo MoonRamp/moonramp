@@ -1,16 +1,27 @@
-use std::error::Error;
+use std::{error::Error, sync::Arc};
 
+use argon2::{
+    password_hash::{
+        rand_core::{OsRng, RngCore},
+        PasswordHasher, SaltString,
+    },
+    Argon2,
+};
 use chrono::Utc;
 use clap::{Parser, Subcommand};
-use sea_orm::{entity::*, Database};
+use sea_orm::{entity::*, Database, QueryFilter, QueryOrder};
+use serde_json::json;
 use sha3::{Digest, Sha3_256};
-use uuid::Uuid;
 
 //use sea_orm::SqlxSqliteConnector;
 //use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 
-use moonramp_core::{chrono, sea_orm, serde_json, sha3, tokio, uuid, Hash};
-use moonramp_entity::{api_token, merchant, role};
+use moonramp_core::{argon2, chrono, sea_orm, serde_json, sha3, tokio, ApiCredential, Hash};
+use moonramp_encryption::{
+    EncryptionKeyCustodian, KeyCustodian, KeyEncryptionKeyCustodian,
+    MasterKeyEncryptionKeyCustodian, MerchantScopedSecret,
+};
+use moonramp_entity::{api_token, cipher::Cipher, key_encryption_key, merchant, role};
 use moonramp_migration::{Migrator, MigratorTrait};
 
 #[derive(Parser)]
@@ -52,7 +63,10 @@ enum Commands {
     },
     CreateApiToken {
         #[clap(short = 'm', long)]
-        merchant_id: String,
+        merchant_hash: Hash,
+
+        #[clap(short = 'M', long)]
+        master_key_encryption_key: String,
     },
 }
 
@@ -93,8 +107,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             primary_email,
             primary_phone,
         } => {
+            let mut hasher = Sha3_256::new();
+            hasher.update(name.as_bytes());
+            let merchant_hash = Hash::try_from(hasher.finalize().to_vec())?;
             let m = merchant::ActiveModel {
-                id: Set(Uuid::new_v4().to_simple().to_string()),
+                hash: Set(merchant_hash),
                 name: Set(name),
                 address: Set(address),
                 primary_email: Set(primary_email),
@@ -105,15 +122,72 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .await?;
             println!("{}", serde_json::to_string(&m)?);
         }
-        Commands::CreateApiToken { merchant_id } => {
+        Commands::CreateApiToken {
+            merchant_hash,
+            master_key_encryption_key,
+        } => {
+            let kek_custodian = {
+                let master_custodian = MasterKeyEncryptionKeyCustodian::new(
+                    master_key_encryption_key.as_bytes().to_vec(),
+                )?;
+                let kek = if let Some(kek) = key_encryption_key::Entity::find()
+                    .filter(
+                        key_encryption_key::Column::MasterKeyEncryptionKeyHash
+                            .eq(master_custodian.hash()),
+                    )
+                    .order_by_desc(key_encryption_key::Column::CreatedAt)
+                    .one(&database)
+                    .await?
+                {
+                    kek
+                } else {
+                    let secret = master_custodian.gen_secret()?;
+                    master_custodian.lock(secret)?.insert(&database).await?
+                };
+                Arc::new(KeyEncryptionKeyCustodian::new(
+                    master_custodian.unlock(kek)?.to_vec(),
+                )?)
+            };
+
+            let mut token_secret = vec![0u8; 32];
+            OsRng.fill_bytes(&mut token_secret);
+
             let mut hasher = Sha3_256::new();
-            hasher.update(Uuid::new_v4().to_simple().to_string().as_bytes());
-            let token = Hash::try_from(hasher.finalize().to_vec())?;
+            hasher.update(&token_secret);
+            let token_hash = Hash::try_from(hasher.finalize().to_vec())?;
+
+            let ek = kek_custodian
+                .lock(MerchantScopedSecret {
+                    merchant_hash: merchant_hash.clone(),
+                    secret: kek_custodian.gen_secret()?,
+                })?
+                .insert(&database)
+                .await?;
+
+            let ek_custodian = EncryptionKeyCustodian::new(
+                kek_custodian.unlock(ek)?.secret.to_vec(),
+                Cipher::Aes256GcmSiv,
+            )?;
+
+            let salt = SaltString::generate(&mut OsRng);
+
+            let argon2 = Argon2::default();
+            let password_hash = argon2.hash_password(&token_secret, &salt)?;
+
+            let (nonce, ciphertext) = ek_custodian.encrypt(password_hash.to_string().as_bytes())?;
+
+            let api_credential = ApiCredential {
+                hash: token_hash.clone(),
+                secret: token_secret,
+            };
 
             let t = api_token::ActiveModel {
-                id: Set(Uuid::new_v4().to_simple().to_string()),
-                merchant_id: Set(merchant_id.clone()),
-                token: Set(token.to_string()),
+                hash: Set(token_hash),
+                merchant_hash: Set(merchant_hash.clone()),
+                cipher: Set(Cipher::Aes256GcmSiv),
+                encryption_key_hash: Set(ek_custodian.hash()),
+                blob: Set(ciphertext),
+                nonce: Set(nonce),
                 created_at: Set(Utc::now()),
             }
             .insert(&database)
@@ -132,10 +206,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     role::Scope::Write,
                 ];
                 for s in scopes {
+                    let mut hasher = Sha3_256::new();
+                    hasher.update(&merchant_hash);
+                    hasher.update(&t.hash);
+                    hasher.update(format!("{:?}", r).as_bytes());
+                    hasher.update(format!("{:?}", s).as_bytes());
+                    let role_hash = Hash::try_from(hasher.finalize().to_vec())?;
                     role::ActiveModel {
-                        id: Set(Uuid::new_v4().to_simple().to_string()),
-                        merchant_id: Set(merchant_id.clone()),
-                        token_id: Set(t.id.clone()),
+                        hash: Set(role_hash),
+                        merchant_hash: Set(merchant_hash.clone()),
+                        token_hash: Set(t.hash.clone()),
                         resource: Set(r.clone()),
                         scope: Set(s),
                         api_group: Set(None),
@@ -145,7 +225,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .await?;
                 }
             }
-            println!("{}", serde_json::to_string(&t)?);
+            println!(
+                "{}",
+                serde_json::to_string(&json!({
+                    "api_credential": api_credential.to_bearer()?,
+                    "api_token": t
+                }))?
+            );
         }
     }
     Ok(())

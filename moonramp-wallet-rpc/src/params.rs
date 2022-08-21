@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use moonramp_core::{chrono, serde};
+use moonramp_core::{chrono, serde, Hash};
 use moonramp_entity::wallet;
 
 use crate::{BitcoinColdWalletType, Network, Ticker, WalletType};
@@ -31,14 +31,14 @@ pub enum WalletCreateRequest {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase", untagged)]
 pub enum WalletLookupRequest {
-    Hash { hash: String },
+    Hash { hash: Hash },
     Pubkey { pubkey: String },
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct WalletResponse {
-    pub hash: String,
+    pub hash: Hash,
     pub ticker: Ticker,
     pub network: Network,
     pub wallet_type: WalletType,
@@ -49,7 +49,7 @@ pub struct WalletResponse {
 impl From<wallet::Model> for WalletResponse {
     fn from(model: wallet::Model) -> WalletResponse {
         WalletResponse {
-            hash: model.hash.to_string(),
+            hash: model.hash,
             ticker: model.ticker.into(),
             network: model.network.into(),
             wallet_type: model.wallet_type.into(),

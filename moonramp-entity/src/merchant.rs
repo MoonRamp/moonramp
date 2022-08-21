@@ -2,14 +2,14 @@ use chrono::{DateTime, Utc};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use moonramp_core::{chrono, sea_orm, serde};
+use moonramp_core::{chrono, sea_orm, serde, Hash};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "merchants")]
 #[serde(crate = "moonramp_core::serde")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: String,
+    pub hash: Hash,
     pub name: String,
     pub address: String,
     pub primary_email: String,

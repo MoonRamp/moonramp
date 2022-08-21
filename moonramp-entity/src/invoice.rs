@@ -11,7 +11,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
-    pub merchant_id: String,
+    pub merchant_hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
     pub wallet_hash: Hash,
     pub ticker: super::ticker::Ticker,
@@ -24,7 +24,7 @@ pub struct Model {
     pub uri: String,
     pub cipher: super::cipher::Cipher,
     #[sea_orm(indexed, column_type = "Text")]
-    pub encryption_key_id: Hash,
+    pub encryption_key_hash: Hash,
     pub blob: Vec<u8>,
     pub nonce: Vec<u8>,
     pub created_at: DateTime<Utc>,
@@ -50,14 +50,14 @@ pub enum InvoiceStatus {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::encryption_key::Entity",
-        from = "Column::EncryptionKeyId",
-        to = "super::encryption_key::Column::Id"
+        from = "Column::EncryptionKeyHash",
+        to = "super::encryption_key::Column::Hash"
     )]
     EncryptionKey,
     #[sea_orm(
         belongs_to = "super::merchant::Entity",
-        from = "Column::MerchantId",
-        to = "super::merchant::Column::Id"
+        from = "Column::MerchantHash",
+        to = "super::merchant::Column::Hash"
     )]
     Merchant,
     #[sea_orm(has_many = "super::sale::Entity", on_delete = "Cascade")]

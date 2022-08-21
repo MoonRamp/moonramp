@@ -2,17 +2,17 @@ use chrono::{DateTime, Utc};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use moonramp_core::{chrono, sea_orm, serde};
+use moonramp_core::{chrono, sea_orm, serde, Hash};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "roles")]
 #[serde(crate = "moonramp_core::serde")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: String,
+    pub hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
-    pub merchant_id: String,
-    pub token_id: String,
+    pub merchant_hash: Hash,
+    pub token_hash: Hash,
     pub resource: Resource,
     pub scope: Scope,
     pub api_group: Option<String>,
@@ -53,14 +53,14 @@ pub enum Resource {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::api_token::Entity",
-        from = "Column::TokenId",
-        to = "super::api_token::Column::Id"
+        from = "Column::TokenHash",
+        to = "super::api_token::Column::Hash"
     )]
     ApiToken,
     #[sea_orm(
         belongs_to = "super::merchant::Entity",
-        from = "Column::MerchantId",
-        to = "super::merchant::Column::Id"
+        from = "Column::MerchantHash",
+        to = "super::merchant::Column::Hash"
     )]
     Merchant,
 }

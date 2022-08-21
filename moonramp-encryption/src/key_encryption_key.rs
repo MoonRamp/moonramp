@@ -17,19 +17,19 @@ use crate::KeyCustodian;
 
 #[derive(PartialEq, Eq)]
 pub struct MerchantScopedSecret {
-    pub merchant_id: String,
+    pub merchant_hash: Hash,
     pub secret: [u8; 32],
 }
 
 impl fmt::Debug for MerchantScopedSecret {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "MerchantScopedSecret({})", self.merchant_id)
+        write!(f, "MerchantScopedSecret({})", self.merchant_hash)
     }
 }
 
 pub struct KeyEncryptionKeyCustodian {
     key_encryption_key: Vec<u8>,
-    key_encryption_key_id: Hash,
+    key_encryption_key_hash: Hash,
     cipher: Cipher,
 }
 
@@ -37,17 +37,17 @@ impl KeyEncryptionKeyCustodian {
     pub fn new(key_encryption_key: Vec<u8>) -> anyhow::Result<Self> {
         let mut hasher = Sha3_256::new();
         hasher.update(&key_encryption_key);
-        let key_encryption_key_id = Hash::try_from(hasher.finalize().to_vec())?;
+        let key_encryption_key_hash = Hash::try_from(hasher.finalize().to_vec())?;
 
         Ok(KeyEncryptionKeyCustodian {
             key_encryption_key,
-            key_encryption_key_id,
+            key_encryption_key_hash,
             cipher: Cipher::Aes256GcmSiv,
         })
     }
 
-    pub fn id(&self) -> Hash {
-        self.key_encryption_key_id.clone()
+    pub fn hash(&self) -> Hash {
+        self.key_encryption_key_hash.clone()
     }
 }
 
@@ -72,16 +72,16 @@ impl KeyCustodian for KeyEncryptionKeyCustodian {
 
         let mut hasher = Sha3_256::new();
         hasher.update(&merchant_secret.secret);
-        let id = Hash::try_from(hasher.finalize().to_vec())?;
+        let hash = Hash::try_from(hasher.finalize().to_vec())?;
 
         let key_encryption_key = cipher
             .encrypt(nonce, merchant_secret.secret.as_ref())
             .map_err(|err| anyhow!("{}", err))?;
 
         Ok(encryption_key::ActiveModel {
-            id: Set(id),
-            merchant_id: Set(merchant_secret.merchant_id),
-            key_encryption_key_id: Set(self.key_encryption_key_id.clone()),
+            hash: Set(hash),
+            merchant_hash: Set(merchant_secret.merchant_hash),
+            key_encryption_key_hash: Set(self.key_encryption_key_hash.clone()),
             cipher: Set(self.cipher.clone()),
             key: Set(key_encryption_key),
             nonce: Set(n_raw),
@@ -99,7 +99,7 @@ impl KeyCustodian for KeyEncryptionKeyCustodian {
             .try_into()
             .map_err(|_| anyhow!("Invalid EncryptionKey"))?;
         Ok(MerchantScopedSecret {
-            merchant_id: locked_key.merchant_id,
+            merchant_hash: locked_key.merchant_hash,
             secret: secret,
         })
     }
@@ -111,24 +111,27 @@ mod tests {
 
     #[test]
     fn test_key_encryption_key_custodian() {
+        let mut hasher = Sha3_256::new();
+        hasher.update(b"MoonRamp");
+        let merchant_hash = Hash::try_from(hasher.finalize().to_vec()).unwrap();
         let secret = b"an example very very secret key.";
         let kek = KeyEncryptionKeyCustodian::new(secret.to_vec())
             .expect("Invalid MasterKeyEncryptionKeyCustodian");
         assert_eq!(
-            kek.id().to_string(),
+            kek.hash().to_string(),
             "Fgm9dLoNoRgdUwEWB5QLFHdhccYY2Zx5egCrY4gnqJpf".to_string()
         );
         let secret = b"BTH a very very very secret key.";
         let ek = kek.lock(MerchantScopedSecret {
-            merchant_id: "merchant_id".to_string(),
+            merchant_hash: merchant_hash.clone(),
             secret: *secret,
         });
         assert!(ek.is_ok());
         let ek = ek.expect("Invalid EncryptionKey");
         let ek = encryption_key::Model {
-            id: ek.id.unwrap(),
-            merchant_id: ek.merchant_id.unwrap(),
-            key_encryption_key_id: ek.key_encryption_key_id.unwrap(),
+            hash: ek.hash.unwrap(),
+            merchant_hash: ek.merchant_hash.unwrap(),
+            key_encryption_key_hash: ek.key_encryption_key_hash.unwrap(),
             cipher: ek.cipher.unwrap(),
             key: ek.key.unwrap(),
             nonce: ek.nonce.unwrap(),
@@ -138,7 +141,7 @@ mod tests {
         assert_eq!(
             unlocked_secret.ok(),
             Some(MerchantScopedSecret {
-                merchant_id: "merchant_id".to_string(),
+                merchant_hash,
                 secret: *secret,
             })
         );

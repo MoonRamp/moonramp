@@ -1,7 +1,9 @@
 #[cfg(feature = "crypto")]
-use std::{convert::TryFrom, ops::Deref};
+use std::{convert::TryFrom, ops::Deref, str::FromStr};
 use std::{fmt, hash::Hash as StdHash, net::SocketAddr};
 
+#[cfg(feature = "serialization")]
+use serde::{de, Deserializer, Serializer};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "async-core")]
 use tokio::sync::{mpsc, oneshot};
@@ -25,6 +27,28 @@ impl<'a> From<&'a str> for NodeId {
 impl From<String> for NodeId {
     fn from(val: String) -> NodeId {
         NodeId(val)
+    }
+}
+
+#[cfg(feature = "crypto")]
+/// An api credentail for storing an api_token.hash and api_token.secret
+#[derive(Clone, Debug, StdHash, PartialEq, Eq, Deserialize, Serialize)]
+pub struct ApiCredential {
+    /// The api_token.hash to be used for lookup
+    pub hash: Hash,
+    /// The secret to preform password hash validation with
+    pub secret: Vec<u8>,
+}
+
+#[cfg(all(feature = "crypto", feature = "serialization"))]
+impl ApiCredential {
+    /// Convert an ApiCredential into a bs58 encoded msgpacked http bearer token
+    pub fn to_bearer(&self) -> anyhow::Result<String> {
+        Ok(bs58::encode(&rmp_serde::to_vec(self)?).into_string())
+    }
+    /// Convert an ApiCredential from a bs58 encoded msgpacked http bearer token
+    pub fn from_bearer(token: &str) -> anyhow::Result<Self> {
+        Ok(rmp_serde::from_slice(&bs58::decode(token).into_vec()?)?)
     }
 }
 
@@ -154,8 +178,29 @@ pub enum NetworkTunnelChannel {
 
 /// Used to represent a 'hash' of data, useful because of its fmt and sea_orm impls
 #[cfg(feature = "crypto")]
-#[derive(Clone, PartialEq, Eq, StdHash, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, StdHash)]
 pub struct Hash(pub [u8; 32]);
+
+#[cfg(feature = "crypto")]
+impl serde::Serialize for Hash {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.to_string().serialize(s)
+    }
+}
+
+#[cfg(feature = "crypto")]
+impl<'de> serde::Deserialize<'de> for Hash {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        FromStr::from_str(&s).map_err(de::Error::custom)
+    }
+}
 
 #[cfg(feature = "crypto")]
 impl Hash {
@@ -225,6 +270,14 @@ impl<'a> TryFrom<&'a str> for Hash {
         let mut buf = [0u8; 32];
         bs58::decode(val).into(&mut buf)?;
         Ok(Hash(buf))
+    }
+}
+
+#[cfg(feature = "crypto")]
+impl FromStr for Hash {
+    type Err = anyhow::Error;
+    fn from_str(val: &str) -> anyhow::Result<Hash> {
+        val.try_into()
     }
 }
 

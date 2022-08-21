@@ -35,49 +35,49 @@ pub trait SaleRpc {
     #[method(name = "sale.invoice")]
     async fn invoice(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleInvoiceRequest,
     ) -> RpcResult<SaleInvoiceResponse>;
 
     #[method(name = "sale.invoiceLookup")]
     async fn invoice_lookup(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleInvoiceLookupRequest,
     ) -> RpcResult<Option<SaleInvoiceResponse>>;
 
     #[method(name = "sale.capture")]
     async fn capture(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleCaptureRequest,
     ) -> RpcResult<SaleResponse>;
 
     //#[method(name = "sale.captureAsync")]
     //async fn capture_async(
     //    &self,
-    //    merchant_id: String,
+    //    merchant_hash: String,
     //    request: SaleCaptureAsyncRequest,
     //) -> RpcResult<SaleResponse>;
 
     //#[method(name = "sale.checkout")]
     //async fn checkout(
     //    &self,
-    //    merchant_id: String,
+    //    merchant_hash: String,
     //    request: SaleCheckoutRequest,
     //) -> RpcResult<SaleCheckoutResponse>;
 
     #[method(name = "sale.lookup")]
     async fn lookup(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleLookupRequest,
     ) -> RpcResult<Option<SaleResponse>>;
 }
 
 #[derive(Clone)]
 pub struct SaleRpcImpl {
-    master_merchant_id: Arc<String>,
+    master_merchant_hash: Arc<Hash>,
     kek_custodian: Arc<KeyEncryptionKeyCustodian>,
     database: DatabaseConnection,
     bitcoin_gateway_config: BitcoinRpcConfig,
@@ -87,15 +87,15 @@ impl SaleRpcImpl {
     async fn load_program(
         &self,
         txn: &DatabaseTransaction,
-        merchant_id: String,
-        program: Option<String>,
+        merchant_hash: Hash,
+        program: Option<Hash>,
     ) -> anyhow::Result<(program::Model, EncryptionKeyCustodian)> {
         let p = if let Some(p) = program {
             program::Entity::find()
                 .filter(
                     Condition::all()
                         .add(program::Column::Hash.eq(p))
-                        .add(program::Column::MerchantId.eq(merchant_id)),
+                        .add(program::Column::MerchantHash.eq(merchant_hash)),
                 )
                 .one(&self.database)
                 .await?
@@ -105,8 +105,8 @@ impl SaleRpcImpl {
                     Condition::all()
                         .add(program::Column::Name.eq("moonramp-program-default-sale"))
                         .add(
-                            program::Column::MerchantId
-                                .eq(self.master_merchant_id.as_ref().clone()),
+                            program::Column::MerchantHash
+                                .eq(self.master_merchant_hash.as_ref().clone()),
                         ),
                 )
                 .order_by_desc(program::Column::Revision)
@@ -120,8 +120,10 @@ impl SaleRpcImpl {
         let p_ek = encryption_key::Entity::find()
             .filter(
                 Condition::all()
-                    .add(encryption_key::Column::Id.eq(p.encryption_key_id.clone()))
-                    .add(encryption_key::Column::KeyEncryptionKeyId.eq(self.kek_custodian.id())),
+                    .add(encryption_key::Column::Hash.eq(p.encryption_key_hash.clone()))
+                    .add(
+                        encryption_key::Column::KeyEncryptionKeyHash.eq(self.kek_custodian.hash()),
+                    ),
             )
             .all(txn)
             .await?
@@ -140,14 +142,14 @@ impl SaleRpcImpl {
     async fn load_wallet(
         &self,
         txn: &DatabaseTransaction,
-        merchant_id: String,
-        hash: String,
+        merchant_hash: Hash,
+        hash: Hash,
     ) -> anyhow::Result<(wallet::Model, EncryptionKeyCustodian)> {
         let w = wallet::Entity::find()
             .filter(
                 Condition::all()
                     .add(wallet::Column::Hash.eq(hash))
-                    .add(wallet::Column::MerchantId.eq(merchant_id)),
+                    .add(wallet::Column::MerchantHash.eq(merchant_hash)),
             )
             .all(txn)
             .await?
@@ -158,8 +160,10 @@ impl SaleRpcImpl {
         let w_ek = encryption_key::Entity::find()
             .filter(
                 Condition::all()
-                    .add(encryption_key::Column::Id.eq(w.encryption_key_id.clone()))
-                    .add(encryption_key::Column::KeyEncryptionKeyId.eq(self.kek_custodian.id())),
+                    .add(encryption_key::Column::Hash.eq(w.encryption_key_hash.clone()))
+                    .add(
+                        encryption_key::Column::KeyEncryptionKeyHash.eq(self.kek_custodian.hash()),
+                    ),
             )
             .all(txn)
             .await?
@@ -178,14 +182,14 @@ impl SaleRpcImpl {
     async fn load_wallet_with_lock(
         &self,
         txn: &DatabaseTransaction,
-        merchant_id: String,
-        hash: String,
+        merchant_hash: Hash,
+        hash: Hash,
     ) -> anyhow::Result<(wallet::Model, EncryptionKeyCustodian)> {
         let w = wallet::Entity::find()
             .filter(
                 Condition::all()
                     .add(wallet::Column::Hash.eq(hash))
-                    .add(wallet::Column::MerchantId.eq(merchant_id)),
+                    .add(wallet::Column::MerchantHash.eq(merchant_hash)),
             )
             .lock_exclusive()
             .all(txn)
@@ -197,8 +201,10 @@ impl SaleRpcImpl {
         let w_ek = encryption_key::Entity::find()
             .filter(
                 Condition::all()
-                    .add(encryption_key::Column::Id.eq(w.encryption_key_id.clone()))
-                    .add(encryption_key::Column::KeyEncryptionKeyId.eq(self.kek_custodian.id())),
+                    .add(encryption_key::Column::Hash.eq(w.encryption_key_hash.clone()))
+                    .add(
+                        encryption_key::Column::KeyEncryptionKeyHash.eq(self.kek_custodian.hash()),
+                    ),
             )
             .all(txn)
             .await?
@@ -223,7 +229,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
     async fn invoice(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleInvoiceRequest,
     ) -> RpcResult<SaleInvoiceResponse> {
         debug!("sale.invoice {:?}", request);
@@ -231,7 +237,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
         let txn = self.database.begin().await.into_rpc_result()?;
         let (p, p_ek_custodian) = self
-            .load_program(&txn, merchant_id.clone(), request.program)
+            .load_program(&txn, merchant_hash.clone(), request.program)
             .await
             .into_rpc_result()?;
 
@@ -241,7 +247,7 @@ impl SaleRpcServer for SaleRpcImpl {
         );
 
         let (w, w_ek_custodian) = self
-            .load_wallet_with_lock(&txn, merchant_id.clone(), request.hash)
+            .load_wallet_with_lock(&txn, merchant_hash.clone(), request.hash)
             .await
             .into_rpc_result()?;
 
@@ -296,7 +302,7 @@ impl SaleRpcServer for SaleRpcImpl {
         let ek = self
             .kek_custodian
             .lock(MerchantScopedSecret {
-                merchant_id: merchant_id.clone(),
+                merchant_hash: merchant_hash.clone(),
                 secret: self.kek_custodian.gen_secret().into_rpc_result()?,
             })
             .into_rpc_result()?
@@ -326,7 +332,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
         let invoice_res: SaleInvoiceResponse = invoice::ActiveModel {
             hash: Set(hash),
-            merchant_id: Set(merchant_id),
+            merchant_hash: Set(merchant_hash),
             wallet_hash: Set(w.hash),
             ticker: Set(w.ticker),
             currency: Set(request.currency.into()),
@@ -336,7 +342,7 @@ impl SaleRpcServer for SaleRpcImpl {
             address: Set(i.address),
             amount: Set(request.amount),
             uri: Set(i.uri),
-            encryption_key_id: Set(ek_custodian.id()),
+            encryption_key_hash: Set(ek_custodian.hash()),
             cipher: Set(Cipher::Aes256GcmSiv),
             blob: Set(ciphertext),
             nonce: Set(nonce),
@@ -353,7 +359,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
     async fn invoice_lookup(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleInvoiceLookupRequest,
     ) -> RpcResult<Option<SaleInvoiceResponse>> {
         debug!("sale.invoiceLookup {:?}", request);
@@ -362,7 +368,7 @@ impl SaleRpcServer for SaleRpcImpl {
                 .filter(
                     Condition::all()
                         .add(invoice::Column::Hash.eq(hash))
-                        .add(invoice::Column::MerchantId.eq(merchant_id)),
+                        .add(invoice::Column::MerchantHash.eq(merchant_hash)),
                 )
                 .one(&self.database)
                 .await
@@ -374,10 +380,10 @@ impl SaleRpcServer for SaleRpcImpl {
                 let ek = encryption_key::Entity::find()
                     .filter(
                         Condition::all()
-                            .add(encryption_key::Column::Id.eq(i.encryption_key_id.clone()))
+                            .add(encryption_key::Column::Hash.eq(i.encryption_key_hash.clone()))
                             .add(
-                                encryption_key::Column::KeyEncryptionKeyId
-                                    .eq(self.kek_custodian.id()),
+                                encryption_key::Column::KeyEncryptionKeyHash
+                                    .eq(self.kek_custodian.hash()),
                             ),
                     )
                     .one(&self.database)
@@ -407,7 +413,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
     async fn capture(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleCaptureRequest,
     ) -> RpcResult<SaleResponse> {
         debug!("sale.capture {:?}", request);
@@ -416,7 +422,7 @@ impl SaleRpcServer for SaleRpcImpl {
             .filter(
                 Condition::all()
                     .add(invoice::Column::Hash.eq(request.hash.clone()))
-                    .add(invoice::Column::MerchantId.eq(merchant_id.clone())),
+                    .add(invoice::Column::MerchantHash.eq(merchant_hash.clone())),
             )
             .lock_exclusive()
             .all(&txn)
@@ -431,9 +437,9 @@ impl SaleRpcServer for SaleRpcImpl {
             txn.rollback().await.into_rpc_result()?;
             return self
                 .lookup(
-                    merchant_id,
+                    merchant_hash,
                     SaleLookupRequest::InvoiceHash {
-                        invoice_hash: i.hash.to_string(),
+                        invoice_hash: i.hash,
                     },
                 )
                 .await?
@@ -444,7 +450,7 @@ impl SaleRpcServer for SaleRpcImpl {
         let program_find_start = Instant::now();
 
         let (p, p_ek_custodian) = self
-            .load_program(&txn, merchant_id.clone(), request.program)
+            .load_program(&txn, merchant_hash.clone(), request.program)
             .await
             .into_rpc_result()?;
 
@@ -454,7 +460,7 @@ impl SaleRpcServer for SaleRpcImpl {
         );
 
         let (w, w_ek_custodian) = self
-            .load_wallet(&txn, merchant_id.clone(), i.wallet_hash.to_string())
+            .load_wallet(&txn, merchant_hash.clone(), i.wallet_hash.clone())
             .await
             .into_rpc_result()?;
 
@@ -503,7 +509,7 @@ impl SaleRpcServer for SaleRpcImpl {
         let ek = self
             .kek_custodian
             .lock(MerchantScopedSecret {
-                merchant_id: merchant_id.clone(),
+                merchant_hash: merchant_hash.clone(),
                 secret: self.kek_custodian.gen_secret().into_rpc_result()?,
             })
             .into_rpc_result()?
@@ -526,7 +532,8 @@ impl SaleRpcServer for SaleRpcImpl {
             .into_rpc_result()?;
 
         let mut hasher = Sha3_256::new();
-        hasher.update(request.uuid + &request.hash);
+        hasher.update(request.uuid);
+        hasher.update(request.hash);
         let hash = Hash::try_from(hasher.finalize().to_vec()).into_rpc_result()?;
 
         if s.funded {
@@ -540,7 +547,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
         let sale_res: SaleResponse = sale::ActiveModel {
             hash: Set(hash),
-            merchant_id: Set(merchant_id),
+            merchant_hash: Set(merchant_hash),
             wallet_hash: Set(w.hash),
             invoice_hash: Set(i.hash),
             ticker: Set(i.ticker),
@@ -550,7 +557,7 @@ impl SaleRpcServer for SaleRpcImpl {
             address: Set(i.address),
             amount: Set(s.amount),
             confirmations: Set(confirmations),
-            encryption_key_id: Set(ek_custodian.id()),
+            encryption_key_hash: Set(ek_custodian.hash()),
             cipher: Set(Cipher::Aes256GcmSiv),
             blob: Set(ciphertext),
             nonce: Set(nonce),
@@ -565,7 +572,7 @@ impl SaleRpcServer for SaleRpcImpl {
 
     async fn lookup(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: SaleLookupRequest,
     ) -> RpcResult<Option<SaleResponse>> {
         debug!("sale.lookup {:?}", request);
@@ -574,7 +581,7 @@ impl SaleRpcServer for SaleRpcImpl {
                 .filter(
                     Condition::all()
                         .add(sale::Column::Hash.eq(hash))
-                        .add(sale::Column::MerchantId.eq(merchant_id)),
+                        .add(sale::Column::MerchantHash.eq(merchant_hash)),
                 )
                 .one(&self.database)
                 .await
@@ -583,7 +590,7 @@ impl SaleRpcServer for SaleRpcImpl {
                 .filter(
                     Condition::all()
                         .add(sale::Column::InvoiceHash.eq(invoice_hash))
-                        .add(sale::Column::MerchantId.eq(merchant_id)),
+                        .add(sale::Column::MerchantHash.eq(merchant_hash)),
                 )
                 .one(&self.database)
                 .await
@@ -595,10 +602,10 @@ impl SaleRpcServer for SaleRpcImpl {
                 let ek = encryption_key::Entity::find()
                     .filter(
                         Condition::all()
-                            .add(encryption_key::Column::Id.eq(s.encryption_key_id.clone()))
+                            .add(encryption_key::Column::Hash.eq(s.encryption_key_hash.clone()))
                             .add(
-                                encryption_key::Column::KeyEncryptionKeyId
-                                    .eq(self.kek_custodian.id()),
+                                encryption_key::Column::KeyEncryptionKeyHash
+                                    .eq(self.kek_custodian.hash()),
                             ),
                     )
                     .one(&self.database)
@@ -636,7 +643,7 @@ pub struct SaleRpcService {
 impl SaleRpcService {
     pub fn new(
         node_id: NodeId,
-        master_merchant_id: Arc<String>,
+        master_merchant_hash: Arc<Hash>,
         kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
         bitcoin_rpc_endpoint: String,
@@ -651,7 +658,7 @@ impl SaleRpcService {
             basic_auth: Some(bitcoin_rpc_auth),
         };
         let rpc = SaleRpcImpl {
-            master_merchant_id,
+            master_merchant_hash,
             kek_custodian,
             database,
             bitcoin_gateway_config,
@@ -698,39 +705,23 @@ mod tests {
     use sea_orm::Database;
     use serde_json::json;
 
-    use moonramp_encryption::MasterKeyEncryptionKeyCustodian;
     use moonramp_migration::testing::setup_testdb;
     use moonramp_wallet::{BitcoinWallet, Currency, Network, Ticker};
-
-    async fn test_kek(
-        database: &DatabaseConnection,
-    ) -> anyhow::Result<Arc<KeyEncryptionKeyCustodian>> {
-        let master_key_encryption_key = vec![0u8; 32];
-        let master_custodian = MasterKeyEncryptionKeyCustodian::new(master_key_encryption_key)?;
-        let secret = master_custodian.gen_secret()?;
-        let kek = master_custodian.lock(secret)?.insert(database).await?;
-        Ok(Arc::new(KeyEncryptionKeyCustodian::new(
-            master_custodian.unlock(kek)?.to_vec(),
-        )?))
-    }
 
     async fn test_rpc(
         create_wallet: bool,
         create_invoice: bool,
-    ) -> anyhow::Result<(String, Option<Hash>, Option<Hash>, RpcModule<SaleRpcImpl>)> {
+    ) -> anyhow::Result<(Hash, Option<Hash>, Option<Hash>, RpcModule<SaleRpcImpl>)> {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, _, t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
-        let kek_custodian = test_kek(&database)
-            .await
-            .expect("Invalid KeyEncryptionKeyCustodian");
 
         let ek = kek_custodian
             .lock(MerchantScopedSecret {
-                merchant_id: t.merchant_id.clone(),
+                merchant_hash: t.merchant_hash.clone(),
                 secret: kek_custodian.gen_secret()?,
             })?
             .insert(&database)
@@ -753,14 +744,14 @@ mod tests {
 
         program::ActiveModel {
             hash: Set(hash),
-            merchant_id: Set(t.merchant_id.clone()),
+            merchant_hash: Set(t.merchant_hash.clone()),
             name: Set("moonramp-program-default-sale".to_string()),
             version: Set("0.1.0".to_string()),
             url: Set(None),
             description: Set(None),
             private: Set(true),
             revision: Set(0),
-            encryption_key_id: Set(ek_custodian.id()),
+            encryption_key_hash: Set(ek_custodian.hash()),
             cipher: Set(Cipher::Noop),
             blob: Set(ciphertext),
             nonce: Set(nonce),
@@ -771,7 +762,7 @@ mod tests {
 
         let ek = kek_custodian
             .lock(MerchantScopedSecret {
-                merchant_id: t.merchant_id.clone(),
+                merchant_hash: t.merchant_hash.clone(),
                 secret: kek_custodian.gen_secret()?,
             })?
             .insert(&database)
@@ -792,12 +783,12 @@ mod tests {
 
             wallet::ActiveModel {
                 hash: Set(hash.clone()),
-                merchant_id: Set(t.merchant_id.clone()),
+                merchant_hash: Set(t.merchant_hash.clone()),
                 ticker: Set(w.ticker().into()),
                 network: Set(w.network().into()),
                 wallet_type: Set(w.wallet_type().into()),
                 pubkey: Set(w.pubkey().to_string()),
-                encryption_key_id: Set(ek_custodian.id()),
+                encryption_key_hash: Set(ek_custodian.hash()),
                 cipher: Set(Cipher::Aes256GcmSiv),
                 blob: Set(ciphertext),
                 nonce: Set(nonce),
@@ -822,7 +813,7 @@ mod tests {
 
             invoice::ActiveModel {
                 hash: Set(hash.clone()),
-                merchant_id: Set(t.merchant_id.clone()),
+                merchant_hash: Set(t.merchant_hash.clone()),
                 wallet_hash: Set(wallet_hash.clone().expect("Invalid wallet hash")),
                 ticker: Set(Ticker::BTC.into()),
                 currency: Set(Currency::BTC.into()),
@@ -832,7 +823,7 @@ mod tests {
                 address: Set(address.clone()),
                 amount: Set(0.00001000),
                 uri: Set(format!("bitcoin:{}", address)),
-                encryption_key_id: Set(ek_custodian.id()),
+                encryption_key_hash: Set(ek_custodian.hash()),
                 cipher: Set(Cipher::Aes256GcmSiv),
                 blob: Set(ciphertext),
                 nonce: Set(nonce),
@@ -852,18 +843,18 @@ mod tests {
             basic_auth: None,
         };
         let rpc = SaleRpcImpl {
-            master_merchant_id: Arc::new(t.merchant_id.clone()),
+            master_merchant_hash: Arc::new(t.merchant_hash.clone()),
             kek_custodian,
             database,
             bitcoin_gateway_config,
         }
         .into_rpc();
-        Ok((t.merchant_id, wallet_hash, invoice_hash, rpc))
+        Ok((t.merchant_hash, wallet_hash, invoice_hash, rpc))
     }
 
     #[tokio::test]
     async fn test_sale_invoice_ok() {
-        let (merchant_id, wallet_hash, _, rpc) = test_rpc(true, false)
+        let (merchant_hash, wallet_hash, _, rpc) = test_rpc(true, false)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
         let wallet_hash = wallet_hash.expect("Invalid wallet hash");
@@ -873,7 +864,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.invoice",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": wallet_hash.to_string(),
                             "uuid": "12345",
@@ -905,7 +896,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sale_invoice_not_ok() {
-        let (merchant_id, _, _, rpc) = test_rpc(false, false)
+        let (merchant_hash, _, _, rpc) = test_rpc(false, false)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
 
@@ -915,7 +906,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.invoice",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": "Invalid",
                     },
                     "id": "12345",
@@ -930,13 +921,13 @@ mod tests {
         assert_eq!(json_rpc["result"], serde_json::Value::Null);
         assert_eq!(
             json_rpc["error"],
-            json!({"code": -32602, "message": "invalid type: string \"Invalid\", expected struct SaleInvoiceRequest at line 1 column 69"})
+            json!({"code": -32602, "message": "invalid type: string \"Invalid\", expected struct SaleInvoiceRequest at line 1 column 83"})
         );
     }
 
     #[tokio::test]
     async fn test_sale_invoice_lookup_ok() {
-        let (merchant_id, wallet_hash, _, rpc) = test_rpc(true, false)
+        let (merchant_hash, wallet_hash, _, rpc) = test_rpc(true, false)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
         let wallet_hash = wallet_hash.expect("Invalid wallet hash");
@@ -946,7 +937,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.invoice",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": wallet_hash.to_string(),
                             "uuid": "12345",
@@ -971,7 +962,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.invoiceLookup",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": json_rpc["result"]["hash"],
                         },
@@ -1000,7 +991,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sale_invoice_lookup_not_ok() {
-        let (merchant_id, _, _, rpc) = test_rpc(false, false)
+        let (merchant_hash, _, _, rpc) = test_rpc(false, false)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
 
@@ -1010,9 +1001,9 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.invoiceLookup",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
-                            "hash": "not_found",
+                            "hash": merchant_hash,
                         },
                     },
                     "id": "12345",
@@ -1030,7 +1021,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sale_capture_ok() {
-        let (merchant_id, _, invoice_hash, rpc) = test_rpc(true, true)
+        let (merchant_hash, _, invoice_hash, rpc) = test_rpc(true, true)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
         let invoice_hash = invoice_hash.expect("Invalid wallet hash");
@@ -1041,7 +1032,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.capture",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": invoice_hash.to_string(),
                             "uuid": "12345",
@@ -1075,7 +1066,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.capture",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": invoice_hash.to_string(),
                             "uuid": "12345",
@@ -1097,7 +1088,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sale_capture_not_ok() {
-        let (merchant_id, _, _, rpc) = test_rpc(false, false)
+        let (merchant_hash, _, _, rpc) = test_rpc(false, false)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
 
@@ -1107,7 +1098,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.capture",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": "Invalid",
                     },
                     "id": "12345",
@@ -1122,13 +1113,13 @@ mod tests {
         assert_eq!(json_rpc["result"], serde_json::Value::Null);
         assert_eq!(
             json_rpc["error"],
-            json!({"code": -32602, "message": "invalid type: string \"Invalid\", expected struct SaleCaptureRequest at line 1 column 69"})
+            json!({"code": -32602, "message": "invalid type: string \"Invalid\", expected struct SaleCaptureRequest at line 1 column 83"})
         );
     }
 
     #[tokio::test]
     async fn test_sale_lookup_ok() {
-        let (merchant_id, _, invoice_hash, rpc) = test_rpc(true, true)
+        let (merchant_hash, _, invoice_hash, rpc) = test_rpc(true, true)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
         let invoice_hash = invoice_hash.expect("Invalid wallet hash");
@@ -1139,7 +1130,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.capture",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": invoice_hash.to_string(),
                             "uuid": "12345",
@@ -1163,7 +1154,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.lookup",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": json_rpc["result"]["hash"],
                         },
@@ -1192,7 +1183,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_sale_lookup_not_ok() {
-        let (merchant_id, _, _, rpc) = test_rpc(false, false)
+        let (merchant_hash, _, _, rpc) = test_rpc(false, false)
             .await
             .expect("Failed to create RpcModule<SaleRpcImpl>");
 
@@ -1202,9 +1193,9 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "sale.lookup",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
-                            "hash": "not_found",
+                            "hash": merchant_hash,
                         },
                     },
                     "id": "12345",

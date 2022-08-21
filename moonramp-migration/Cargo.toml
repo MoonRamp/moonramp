@@ -4,7 +4,7 @@ authors = ["MoonRamp Contributors", "Dionysus <fisted-by-dionysus@proton.me>"]
 homepage = "https://moonramp.github.io"
 repository = "https://github.com/moonramp/moonramp"
 readme = "README.md"
-version = "0.1.20"
+version = "0.1.21"
 edition = "2021"
 license = "MIT"
 
@@ -23,6 +23,7 @@ testing = []
 clap = { version = "3.1.6", features = ["derive"] }
 sea-orm-migration = { version = "^0.8.0", default-features = false }
 
-moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["async-core", "sql"] }
+moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["async-core", "crypto", "sql"] }
+moonramp-encryption = { version = "^0.1", path = "../moonramp-encryption" }
 moonramp-entity = { version = "^0.1", path = "../moonramp-entity" }
 

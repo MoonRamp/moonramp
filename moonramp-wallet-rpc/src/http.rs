@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, ops::Deref, ops::DerefMut};
+use std::{error::Error, fmt, ops::Deref, ops::DerefMut, sync::Arc};
 
 use actix_web::{
     dev::Server, get, guard, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder,
@@ -14,6 +14,7 @@ use moonramp_core::{
     actix_web, actix_web_httpauth, anyhow, sea_orm, serde, serde_json, tokio, uuid,
     NetworkTunnelSender, Sender, TunnelName,
 };
+use moonramp_encryption::KeyEncryptionKeyCustodian;
 use moonramp_entity::role;
 use moonramp_http::{api_token, await_response, check_roles, network_tunnel, HttpError};
 
@@ -26,18 +27,21 @@ pub struct WalletHttpServer {
 #[derive(Clone)]
 pub struct WalletHttpServerData {
     timeout: Duration,
+    kek_custodian: Arc<KeyEncryptionKeyCustodian>,
     database: DatabaseConnection,
     registry_tx: NetworkTunnelSender,
 }
 
 impl WalletHttpServer {
     pub async fn new(
+        kek_custodian: Arc<KeyEncryptionKeyCustodian>,
         database: DatabaseConnection,
         registry_tx: NetworkTunnelSender,
         wallet_http_addr: &str,
     ) -> anyhow::Result<Self> {
         let data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(3000),
+            kek_custodian,
             database,
             registry_tx,
         });
@@ -84,17 +88,17 @@ async fn jsonrpc(
     let start = Instant::now();
 
     let token = auth.token();
-    let t_r = api_token(token, &state.database)
+    let t_r = api_token(token, &state.kek_custodian, &state.database)
         .await
-        .map_err(|err| err.downcast().unwrap_or(HttpError::ServerError))?
+        .map_err(|_err| HttpError::Unauthorized)?
         .ok_or(HttpError::Unauthorized)?;
     let (t, rs) = t_r;
 
     let mut data = data.into_inner();
-    if data["params"]["merchant_id"] != serde_json::Value::Null {
+    if data["params"]["merchant_hash"] != serde_json::Value::Null {
         return Err(HttpError::Unauthorized)?;
     }
-    data["params"]["merchant_id"] = serde_json::Value::String(t.merchant_id.clone());
+    data["params"]["merchant_hash"] = serde_json::Value::String(t.merchant_hash.to_string());
 
     let allowed = match data["method"].as_str() {
         Some("wallet.version") => true,
@@ -177,9 +181,9 @@ async fn wallet_post(
     let start = Instant::now();
 
     let token = auth.token();
-    let t_r = api_token(token, &state.database)
+    let t_r = api_token(token, &state.kek_custodian, &state.database)
         .await
-        .map_err(|err| err.downcast().unwrap_or(HttpError::ServerError))?
+        .map_err(|_err| HttpError::Unauthorized)?
         .ok_or(HttpError::Unauthorized)?;
     let (t, rs) = t_r;
 
@@ -192,7 +196,7 @@ async fn wallet_post(
         "jsonrpc": "2.0",
         "method": "wallet.create",
         "params": {
-            "merchant_id": t.merchant_id,
+            "merchant_hash": t.merchant_hash,
             "request": create_req,
         },
         "id": id,
@@ -243,9 +247,9 @@ async fn wallet_get(
     let start = Instant::now();
 
     let token = auth.token();
-    let t_r = api_token(token, &state.database)
+    let t_r = api_token(token, &state.kek_custodian, &state.database)
         .await
-        .map_err(|err| err.downcast().unwrap_or(HttpError::ServerError))?
+        .map_err(|_err| HttpError::Unauthorized)?
         .ok_or(HttpError::Unauthorized)?;
     let (t, rs) = t_r;
 
@@ -259,7 +263,7 @@ async fn wallet_get(
         "jsonrpc": "2.0",
         "method": "wallet.lookup",
         "params": {
-            "merchant_id": t.merchant_id,
+            "merchant_hash": t.merchant_hash,
             "request": {
                 hash_or_pubkey.to_string() : wallet_hash_or_pubkey,
             },
@@ -359,7 +363,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -367,6 +371,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -383,7 +388,10 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/jsonrpc")
-            .insert_header((AUTHORIZATION, format!("Bearer {}", t.token)))
+            .insert_header((
+                AUTHORIZATION,
+                format!("Bearer {}", cred.to_bearer().unwrap()),
+            ))
             .set_json(json!({
                 "jsonrpc": "2.0",
                 "method": "wallet.lookup",
@@ -409,7 +417,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -417,6 +425,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -433,7 +442,10 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/jsonrpc")
-            .insert_header((AUTHORIZATION, format!("Bearer {}", t.token)))
+            .insert_header((
+                AUTHORIZATION,
+                format!("Bearer {}", cred.to_bearer().unwrap()),
+            ))
             .set_json(json!({
                 "jsonrpc": "2.0",
                 "method": "wallet.test",
@@ -477,7 +489,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let _t = setup_testdb(&database)
+        let (kek_custodian, _cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -485,6 +497,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -526,7 +539,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -534,6 +547,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -550,7 +564,10 @@ mod tests {
 
         let req = test::TestRequest::post()
             .uri("/wallet")
-            .insert_header((AUTHORIZATION, format!("Bearer {}", t.token)))
+            .insert_header((
+                AUTHORIZATION,
+                format!("Bearer {}", cred.to_bearer().unwrap()),
+            ))
             .set_json(
                 serde_json::to_value(WalletCreateRequest::BtcHot)
                     .expect("Invalid WalletCreateRequest"),
@@ -574,7 +591,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let _t = setup_testdb(&database)
+        let (kek_custodian, _cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -582,6 +599,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -620,7 +638,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -628,6 +646,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -644,7 +663,10 @@ mod tests {
 
         let req = test::TestRequest::get()
             .uri("/wallet/hash/12345")
-            .insert_header((AUTHORIZATION, format!("Bearer {}", t.token)))
+            .insert_header((
+                AUTHORIZATION,
+                format!("Bearer {}", cred.to_bearer().unwrap()),
+            ))
             .insert_header(ContentType::json())
             .to_request();
 
@@ -665,7 +687,7 @@ mod tests {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, cred, _t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
 
@@ -673,6 +695,7 @@ mod tests {
 
         let test_data = web::Data::new(WalletHttpServerData {
             timeout: Duration::from_millis(5),
+            kek_custodian,
             database,
             registry_tx: r_tx,
         });
@@ -689,7 +712,10 @@ mod tests {
 
         let req = test::TestRequest::get()
             .uri("/wallet/hash/12345")
-            .insert_header((AUTHORIZATION, format!("Bearer {}", t.token)))
+            .insert_header((
+                AUTHORIZATION,
+                format!("Bearer {}", cred.to_bearer().unwrap()),
+            ))
             .insert_header(ContentType::json())
             .to_request();
 

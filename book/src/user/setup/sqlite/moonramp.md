@@ -8,18 +8,20 @@ The following command will generate a new merchant entry with the provide metada
 docker run -v moonramp:/home/moonramp/db --entrypoint=moonramp-migration moonramp/moonramp:0.1.18 -u "sqlite://db/moonramp.db" create-merchant -n "My Merchant" -a "An Address" -e "email@example.com" -p "12223334444"
 ```
 
-Using the `id` from the `create-merchant` command replace `MERCHANT_ID` in the following command to issue an API token for the master merchant. This API token has complete access to the merchant master account.
+To run the next set of commands we need to come up with a secure [Master Key Encryption Key](../mkek.md). We recommend at least a 32 character random password. For our example we will use: `an example very very secret key.`
+
+Using the `hash` from the `create-merchant` command replace `MERCHANT_HASH` and with your password replace `MKEK` in the following command to issue an API token for the master merchant. This API token has complete access to the merchant master account.
 
 ```
-docker run -v moonramp:/home/moonramp/db --entrypoint=moonramp-migration moonramp/moonramp:0.1.18 -u "sqlite://db/moonramp.db" create-api-token -m MERCHANT_ID
+docker run -v moonramp:/home/moonramp/db --entrypoint=moonramp-migration moonramp/moonramp:0.1.18 -u "sqlite://db/moonramp.db" create-api-token -m MERCHANT_HASH -M MKEK
 ```
 
-The api token will be in the `token` field of the json blob returned.
+The api token record will be in the `token` field and the `Bearer Auth` string will be in the `api_credential` field of the json blob returned. The secret that is generated and encoded into the `api_credential` field is not stored in the database and if lost you will need to regenerate a new token.
 
 ## Run the Server
 
 ```
-docker run --rm --name moonramp --link bitcoin -v moonramp:/home/moonramp/db -d moonramp/moonramp:0.1.18 node -u "sqlite://db/moonramp.db" -n example-node-id -m MERCHANT_ID -M "an example very very secret key." -N regtest
+docker run --rm --name moonramp --link bitcoin -v moonramp:/home/moonramp/db -d moonramp/moonramp:0.1.18 node -u "sqlite://db/moonramp.db" -n example-node-id -m MERCHANT_HASH -M MKEK -N regtest
 ```
 
 ## Verify Servers

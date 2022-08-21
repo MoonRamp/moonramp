@@ -32,25 +32,44 @@ impl MigratorTrait for Migrator {
 #[cfg(feature = "testing")]
 pub mod testing {
     use super::{Migrator, MigratorTrait};
+
+    use std::sync::Arc;
+
+    use argon2::{
+        password_hash::{
+            rand_core::{OsRng, RngCore},
+            PasswordHasher, SaltString,
+        },
+        Argon2,
+    };
     use chrono::Utc;
-    use sea_orm::{entity::*, DatabaseConnection};
+    use sea_orm::{entity::*, DatabaseConnection, QueryFilter, QueryOrder};
     use sha3::{Digest, Sha3_256};
-    use uuid::Uuid;
 
-    use moonramp_core::{anyhow, chrono, sea_orm, sha3, uuid, Hash};
-    use moonramp_entity::{api_token, merchant, role};
+    use moonramp_core::{anyhow, argon2, chrono, sea_orm, sha3, ApiCredential, Hash};
+    use moonramp_encryption::{
+        EncryptionKeyCustodian, KeyCustodian, KeyEncryptionKeyCustodian,
+        MasterKeyEncryptionKeyCustodian, MerchantScopedSecret,
+    };
+    use moonramp_entity::{api_token, cipher::Cipher, key_encryption_key, merchant, role};
 
-    pub async fn add_role(
+    async fn add_role(
         database: &DatabaseConnection,
-        merchant_id: String,
-        token_id: String,
+        merchant_hash: Hash,
+        token_hash: Hash,
         resource: role::Resource,
         scope: role::Scope,
     ) -> anyhow::Result<()> {
+        let mut hasher = Sha3_256::new();
+        hasher.update(&merchant_hash);
+        hasher.update(&token_hash);
+        hasher.update(format!("{:?}", resource).as_bytes());
+        hasher.update(format!("{:?}", scope).as_bytes());
+        let role_hash = Hash::try_from(hasher.finalize().to_vec())?;
         role::ActiveModel {
-            id: Set(Uuid::new_v4().to_simple().to_string()),
-            merchant_id: Set(merchant_id),
-            token_id: Set(token_id),
+            hash: Set(role_hash),
+            merchant_hash: Set(merchant_hash),
+            token_hash: Set(token_hash),
             resource: Set(resource),
             scope: Set(scope),
             api_group: Set(None),
@@ -61,10 +80,53 @@ pub mod testing {
         Ok(())
     }
 
-    pub async fn setup_testdb(database: &DatabaseConnection) -> anyhow::Result<api_token::Model> {
+    pub async fn setup_testdb(
+        database: &DatabaseConnection,
+        password: &str,
+    ) -> anyhow::Result<(
+        Arc<KeyEncryptionKeyCustodian>,
+        ApiCredential,
+        api_token::Model,
+    )> {
         Migrator::up(&database, None).await?;
+
+        let kek_custodian = {
+            let master_custodian =
+                MasterKeyEncryptionKeyCustodian::new(password.as_bytes().to_vec())?;
+            let kek = if let Some(kek) = key_encryption_key::Entity::find()
+                .filter(
+                    key_encryption_key::Column::MasterKeyEncryptionKeyHash
+                        .eq(master_custodian.hash()),
+                )
+                .order_by_desc(key_encryption_key::Column::CreatedAt)
+                .one(database)
+                .await?
+            {
+                kek
+            } else {
+                let secret = master_custodian.gen_secret()?;
+                master_custodian.lock(secret)?.insert(database).await?
+            };
+            Arc::new(KeyEncryptionKeyCustodian::new(
+                master_custodian.unlock(kek)?.to_vec(),
+            )?)
+        };
+        inner_setup_testdb(database, kek_custodian).await
+    }
+
+    pub async fn inner_setup_testdb(
+        database: &DatabaseConnection,
+        kek_custodian: Arc<KeyEncryptionKeyCustodian>,
+    ) -> anyhow::Result<(
+        Arc<KeyEncryptionKeyCustodian>,
+        ApiCredential,
+        api_token::Model,
+    )> {
+        let mut hasher = Sha3_256::new();
+        hasher.update(b"Moonramp");
+        let merchant_hash = Hash::try_from(hasher.finalize().to_vec())?;
         let m = merchant::ActiveModel {
-            id: Set(Uuid::new_v4().to_simple().to_string()),
+            hash: Set(merchant_hash.clone()),
             name: Set("Moonramp".to_string()),
             address: Set("The Moon".to_string()),
             primary_email: Set("developers@moonramp.org".to_string()),
@@ -74,14 +136,45 @@ pub mod testing {
         .insert(database)
         .await?;
 
+        let mut token_secret = vec![0u8; 32];
+        OsRng.fill_bytes(&mut token_secret);
+
         let mut hasher = Sha3_256::new();
-        hasher.update(Uuid::new_v4().to_simple().to_string().as_bytes());
-        let token = Hash::try_from(hasher.finalize().to_vec())?;
+        hasher.update(&token_secret);
+        let token_hash = Hash::try_from(hasher.finalize().to_vec())?;
+
+        let ek = kek_custodian
+            .lock(MerchantScopedSecret {
+                merchant_hash: merchant_hash.clone(),
+                secret: kek_custodian.gen_secret()?,
+            })?
+            .insert(database)
+            .await?;
+
+        let ek_custodian = EncryptionKeyCustodian::new(
+            kek_custodian.unlock(ek)?.secret.to_vec(),
+            Cipher::Aes256GcmSiv,
+        )?;
+
+        let salt = SaltString::generate(&mut OsRng);
+
+        let argon2 = Argon2::default();
+        let password_hash = argon2.hash_password(&token_secret, &salt)?;
+
+        let api_credential = ApiCredential {
+            hash: token_hash.clone(),
+            secret: token_secret,
+        };
+
+        let (nonce, ciphertext) = ek_custodian.encrypt(password_hash.to_string().as_bytes())?;
 
         let t = api_token::ActiveModel {
-            id: Set(Uuid::new_v4().to_simple().to_string()),
-            merchant_id: Set(m.id.clone()),
-            token: Set(token.to_string()),
+            hash: Set(token_hash),
+            merchant_hash: Set(m.hash.clone()),
+            cipher: Set(Cipher::Aes256GcmSiv),
+            encryption_key_hash: Set(ek_custodian.hash()),
+            blob: Set(ciphertext),
+            nonce: Set(nonce),
             created_at: Set(Utc::now()),
         }
         .insert(database)
@@ -100,9 +193,16 @@ pub mod testing {
                 role::Scope::Write,
             ];
             for s in scopes {
-                add_role(database, m.id.clone(), t.id.clone(), r.clone(), s.clone()).await?;
+                add_role(
+                    database,
+                    m.hash.clone(),
+                    t.hash.clone(),
+                    r.clone(),
+                    s.clone(),
+                )
+                .await?;
             }
         }
-        Ok(t)
+        Ok((kek_custodian, api_credential, t))
     }
 }

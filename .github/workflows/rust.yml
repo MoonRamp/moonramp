@@ -44,7 +44,7 @@ jobs:
     env:
       BITCOIN_VERSION: "23.0"
       DB_URL: ${{ matrix.db.url }}
-      MKEK: "an example very very secret key." # 256 bit key
+      MKEK: "an example very very secret key."
     steps:
     - uses: actions/checkout@v3
     - name: Setup postgres docker-compose
@@ -71,13 +71,13 @@ jobs:
       run: |
         touch moonramp.db # sqlite
         target/debug/moonramp-migration -u $DB_URL migrate
-        MERCHANT_ID=$(target/debug/moonramp-migration -u $DB_URL create-merchant -n Moonramp -a 'The Moon' -e moonramp@proton.me -p 13337774444 | jq -r .id)
-        API_TOKEN=$(target/debug/moonramp-migration -u $DB_URL create-api-token -m $MERCHANT_ID | jq -r .token)
-        echo "MERCHANT_ID=$MERCHANT_ID" >> $GITHUB_ENV
+        MERCHANT_HASH=$(target/debug/moonramp-migration -u $DB_URL create-merchant -n Moonramp -a 'The Moon' -e moonramp@proton.me -p 13337774444 | jq -r .hash)
+        API_TOKEN=$(target/debug/moonramp-migration -u $DB_URL create-api-token -m $MERCHANT_HASH -M "$MKEK" | jq -r .api_credential)
+        echo "MERCHANT_HASH=$MERCHANT_HASH" >> $GITHUB_ENV
         echo "API_TOKEN=$API_TOKEN" >> $GITHUB_ENV
     - name: Start Moonramp Server
       run: |
-        RUST_BACKTRACE=1 RUST_LOG=moonramp=trace target/debug/moonramp node -u $DB_URL -n moonramp-psql-bitcoin -m $MERCHANT_ID -M "$MKEK" -N regtest &> moonramp.log &
+        RUST_BACKTRACE=1 RUST_LOG=moonramp=trace target/debug/moonramp node -u $DB_URL -n moonramp-psql-bitcoin -m $MERCHANT_HASH -M "$MKEK" -N regtest &> moonramp.log &
         sleep 2
     - name: Setup Programs
       run: |

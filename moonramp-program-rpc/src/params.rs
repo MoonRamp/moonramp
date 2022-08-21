@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use moonramp_core::{chrono, serde};
+use moonramp_core::{chrono, serde, Hash};
 use moonramp_entity::program;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -28,14 +28,14 @@ pub struct ProgramUpdateRequest {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase", untagged)]
 pub enum ProgramLookupRequest {
-    Hash { hash: String },
+    Hash { hash: Hash },
     Name { name: String },
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct ProgramResponse {
-    pub hash: String,
+    pub hash: Hash,
     pub name: String,
     pub version: String,
     pub url: Option<String>,
@@ -48,7 +48,7 @@ pub struct ProgramResponse {
 impl From<program::Model> for ProgramResponse {
     fn from(model: program::Model) -> ProgramResponse {
         ProgramResponse {
-            hash: model.hash.to_string(),
+            hash: model.hash,
             name: model.name,
             version: model.version,
             url: model.url,

@@ -30,21 +30,21 @@ pub trait ProgramRpc {
     #[method(name = "program.create")]
     async fn create(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: ProgramCreateRequest,
     ) -> RpcResult<ProgramResponse>;
 
     #[method(name = "program.update")]
     async fn update(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: ProgramUpdateRequest,
     ) -> RpcResult<ProgramResponse>;
 
     #[method(name = "program.lookup")]
     async fn lookup(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: ProgramLookupRequest,
     ) -> RpcResult<Option<ProgramResponse>>;
 }
@@ -63,7 +63,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
 
     async fn create(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: ProgramCreateRequest,
     ) -> RpcResult<ProgramResponse> {
         debug!("program.create {:?}", request);
@@ -71,7 +71,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
         let ek = self
             .kek_custodian
             .lock(MerchantScopedSecret {
-                merchant_id: merchant_id.clone(),
+                merchant_hash: merchant_hash.clone(),
                 secret: self.kek_custodian.gen_secret().into_rpc_result()?,
             })
             .into_rpc_result()?
@@ -98,14 +98,14 @@ impl ProgramRpcServer for ProgramRpcImpl {
 
         Ok(program::ActiveModel {
             hash: Set(hash),
-            merchant_id: Set(merchant_id),
+            merchant_hash: Set(merchant_hash),
             name: Set(request.name),
             version: Set(request.version),
             url: Set(request.url),
             description: Set(request.description),
             private: Set(request.private),
             revision: Set(0),
-            encryption_key_id: Set(ek_custodian.id()),
+            encryption_key_hash: Set(ek_custodian.hash()),
             cipher: Set(Cipher::ChaCha20Poly1305),
             blob: Set(ciphertext),
             nonce: Set(nonce),
@@ -119,7 +119,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
 
     async fn update(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: ProgramUpdateRequest,
     ) -> RpcResult<ProgramResponse> {
         debug!("program.update {:?}", request);
@@ -127,7 +127,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
             .filter(
                 Condition::all()
                     .add(program::Column::Name.eq(request.name))
-                    .add(program::Column::MerchantId.eq(merchant_id.clone())),
+                    .add(program::Column::MerchantHash.eq(merchant_hash.clone())),
             )
             .order_by_desc(program::Column::Revision)
             .one(&self.database)
@@ -139,9 +139,11 @@ impl ProgramRpcServer for ProgramRpcImpl {
         let ek = encryption_key::Entity::find()
             .filter(
                 Condition::all()
-                    .add(encryption_key::Column::Id.eq(p.encryption_key_id.clone()))
-                    .add(encryption_key::Column::MerchantId.eq(merchant_id.clone()))
-                    .add(encryption_key::Column::KeyEncryptionKeyId.eq(self.kek_custodian.id())),
+                    .add(encryption_key::Column::Hash.eq(p.encryption_key_hash.clone()))
+                    .add(encryption_key::Column::MerchantHash.eq(merchant_hash.clone()))
+                    .add(
+                        encryption_key::Column::KeyEncryptionKeyHash.eq(self.kek_custodian.hash()),
+                    ),
             )
             .one(&self.database)
             .await
@@ -168,14 +170,14 @@ impl ProgramRpcServer for ProgramRpcImpl {
 
         Ok(program::ActiveModel {
             hash: Set(hash),
-            merchant_id: Set(merchant_id),
+            merchant_hash: Set(merchant_hash),
             name: Set(p.name),
             version: Set(request.version),
             url: Set(request.url),
             description: Set(request.description),
             private: Set(p.private),
             revision: Set(p.revision + 1),
-            encryption_key_id: Set(ek_custodian.id()),
+            encryption_key_hash: Set(ek_custodian.hash()),
             cipher: Set(Cipher::ChaCha20Poly1305),
             blob: Set(ciphertext),
             nonce: Set(nonce),
@@ -189,7 +191,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
 
     async fn lookup(
         &self,
-        merchant_id: String,
+        merchant_hash: Hash,
         request: ProgramLookupRequest,
     ) -> RpcResult<Option<ProgramResponse>> {
         debug!("program.lookup {:?}", request);
@@ -199,7 +201,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
                 .filter(
                     Condition::all()
                         .add(program::Column::Hash.eq(hash))
-                        .add(program::Column::MerchantId.eq(merchant_id.clone())),
+                        .add(program::Column::MerchantHash.eq(merchant_hash.clone())),
                 )
                 .one(&self.database)
                 .await
@@ -209,7 +211,7 @@ impl ProgramRpcServer for ProgramRpcImpl {
                 .filter(
                     Condition::all()
                         .add(program::Column::Name.eq(name))
-                        .add(program::Column::MerchantId.eq(merchant_id.clone())),
+                        .add(program::Column::MerchantHash.eq(merchant_hash.clone())),
                 )
                 .order_by_desc(program::Column::Revision)
                 .one(&self.database)
@@ -282,43 +284,27 @@ mod tests {
     use serde_json::json;
 
     use moonramp_core::serde_json;
-    use moonramp_encryption::MasterKeyEncryptionKeyCustodian;
     use moonramp_migration::testing::setup_testdb;
 
-    async fn test_kek(
-        database: &DatabaseConnection,
-    ) -> anyhow::Result<Arc<KeyEncryptionKeyCustodian>> {
-        let master_key_encryption_key = vec![0u8; 32];
-        let master_custodian = MasterKeyEncryptionKeyCustodian::new(master_key_encryption_key)?;
-        let secret = master_custodian.gen_secret()?;
-        let kek = master_custodian.lock(secret)?.insert(database).await?;
-        Ok(Arc::new(KeyEncryptionKeyCustodian::new(
-            master_custodian.unlock(kek)?.to_vec(),
-        )?))
-    }
-
-    async fn test_rpc() -> anyhow::Result<(String, RpcModule<ProgramRpcImpl>)> {
+    async fn test_rpc() -> anyhow::Result<(Hash, RpcModule<ProgramRpcImpl>)> {
         let database = Database::connect("sqlite::memory:")
             .await
             .expect("Failed to open in-memory sqlite db");
-        let t = setup_testdb(&database)
+        let (kek_custodian, _, t) = setup_testdb(&database, "moonramp")
             .await
             .expect("Failed to setup testdb");
-        let kek_custodian = test_kek(&database)
-            .await
-            .expect("Invalid KeyEncryptionKeyCustodian");
 
         let rpc = ProgramRpcImpl {
             kek_custodian,
             database,
         }
         .into_rpc();
-        Ok((t.merchant_id, rpc))
+        Ok((t.merchant_hash, rpc))
     }
 
     #[tokio::test]
     async fn test_program_create_ok() {
-        let (merchant_id, rpc) = test_rpc()
+        let (merchant_hash, rpc) = test_rpc()
             .await
             .expect("Failed to create RpcModule<ProgramRpcImpl>");
 
@@ -334,7 +320,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "program.create",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "name": "test",
                             "version": "0.1.0",
@@ -369,7 +355,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_program_create_not_ok() {
-        let (merchant_id, rpc) = test_rpc()
+        let (merchant_hash, rpc) = test_rpc()
             .await
             .expect("Failed to create RpcModule<ProgramRpcImpl>");
 
@@ -379,7 +365,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "program.create",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": "Invalid",
                     },
                     "id": "12345",
@@ -394,13 +380,13 @@ mod tests {
         assert_eq!(json_rpc["result"], serde_json::Value::Null);
         assert_eq!(
             json_rpc["error"],
-            json!({"code": -32602, "message": "invalid type: string \"Invalid\", expected struct ProgramCreateRequest at line 1 column 69"})
+            json!({"code": -32602, "message": "invalid type: string \"Invalid\", expected struct ProgramCreateRequest at line 1 column 83"})
         );
     }
 
     #[tokio::test]
     async fn test_program_lookup_ok() {
-        let (merchant_id, rpc) = test_rpc()
+        let (merchant_hash, rpc) = test_rpc()
             .await
             .expect("Failed to create RpcModule<ProgramRpcImpl>");
         let data = br#"
@@ -415,7 +401,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "program.create",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "name": "test",
                             "version": "0.1.0",
@@ -440,7 +426,7 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "program.lookup",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
                             "hash": json_rpc["result"]["hash"],
                         },
@@ -472,7 +458,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_program_lookup_not_ok() {
-        let (merchant_id, rpc) = test_rpc()
+        let (merchant_hash, rpc) = test_rpc()
             .await
             .expect("Failed to create RpcModule<ProgramRpcImpl>");
 
@@ -482,9 +468,9 @@ mod tests {
                     "jsonrpc": "2.0",
                     "method": "program.lookup",
                     "params": {
-                        "merchant_id": merchant_id,
+                        "merchant_hash": merchant_hash,
                         "request": {
-                            "hash": "not_found",
+                            "hash": merchant_hash,
                         },
                     },
                     "id": "12345",

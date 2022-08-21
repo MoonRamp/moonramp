@@ -7,7 +7,7 @@ use moonramp_entity::cipher::Cipher;
 
 pub struct EncryptionKeyCustodian {
     encryption_key: Vec<u8>,
-    encryption_key_id: Hash,
+    encryption_key_hash: Hash,
     cipher: Cipher,
 }
 
@@ -15,17 +15,17 @@ impl EncryptionKeyCustodian {
     pub fn new(encryption_key: Vec<u8>, cipher: Cipher) -> anyhow::Result<Self> {
         let mut hasher = Sha3_256::new();
         hasher.update(&encryption_key);
-        let encryption_key_id = Hash::try_from(hasher.finalize().to_vec())?;
+        let encryption_key_hash = Hash::try_from(hasher.finalize().to_vec())?;
 
         Ok(EncryptionKeyCustodian {
             encryption_key,
-            encryption_key_id,
+            encryption_key_hash,
             cipher,
         })
     }
 
-    pub fn id(&self) -> Hash {
-        self.encryption_key_id.clone()
+    pub fn hash(&self) -> Hash {
+        self.encryption_key_hash.clone()
     }
 
     pub fn encrypt(&self, plaintext: &[u8]) -> anyhow::Result<(Vec<u8>, Vec<u8>)> {
@@ -125,7 +125,7 @@ mod tests {
         let ek = EncryptionKeyCustodian::new(secret.to_vec(), Cipher::ChaCha20Poly1305)
             .expect("Invalid MasterKeyEncryptionKeyCustodian");
         assert_eq!(
-            ek.id().to_string(),
+            ek.hash().to_string(),
             "Fgm9dLoNoRgdUwEWB5QLFHdhccYY2Zx5egCrY4gnqJpf".to_string()
         );
         let res = ek.encrypt(&[0x01, 0x02]);

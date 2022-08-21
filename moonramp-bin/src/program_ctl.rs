@@ -5,7 +5,7 @@ use clap::Subcommand;
 use serde_json::json;
 use uuid::Uuid;
 
-use moonramp_core::{anyhow, awc, serde_json, uuid};
+use moonramp_core::{anyhow, awc, serde_json, uuid, Hash};
 use moonramp_program_rpc::{ProgramCreateRequest, ProgramLookupRequest, ProgramUpdateRequest};
 
 #[derive(Subcommand)]
@@ -52,7 +52,7 @@ pub enum ProgramSubcommand {
             conflicts_with("name"),
             required_unless_present("name")
         )]
-        hash: Option<String>,
+        hash: Option<Hash>,
 
         #[clap(short, long, conflicts_with("hash"), required_unless_present("hash"))]
         name: Option<String>,

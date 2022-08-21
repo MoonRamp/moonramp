@@ -2,7 +2,7 @@
 
 ## Validate Moonramp
 
-`API_TOKEN` is the `token` field returned from the json blob output of the `moonramp-migration create-api-token` command run during your desired database setup ([Sqlite](./sqlite/db.md), [Postgres](./postgres/db.md), [CockroachDB](./cockroachdb/db.md), [MySql](./mysql/db.md)).
+`API_TOKEN` is the `api_credential` field returned from the json blob output of the `moonramp-migration create-api-token` command run during your desired database setup ([Sqlite](./sqlite/db.md), [Postgres](./postgres/db.md), [CockroachDB](./cockroachdb/db.md), [MySql](./mysql/db.md)).
 
 ```
 docker exec moonramp moonrampctl -a API_TOKEN program version

@@ -4,7 +4,7 @@ use log::trace;
 use serde::{Deserialize, Serialize};
 
 use moonramp::node_ctl::NodeCtl;
-use moonramp_core::{anyhow, log, serde, tokio};
+use moonramp_core::{anyhow, log, serde, tokio, Hash};
 
 #[derive(clap::ArgEnum, Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
@@ -53,7 +53,7 @@ enum Commands {
         bitcoin_rpc_auth: String,
 
         #[clap(short, long)]
-        master_merchant_id: String,
+        master_merchant_hash: Hash,
 
         #[clap(short = 'M', long)]
         master_key_encryption_key: String,
@@ -83,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
             wallet_http_addr,
             bitcoin_rpc_endpoint,
             bitcoin_rpc_auth,
-            master_merchant_id,
+            master_merchant_hash,
             master_key_encryption_key,
             db_url,
             network,
@@ -95,7 +95,7 @@ async fn main() -> anyhow::Result<()> {
                 wallet_http_addr,
                 bitcoin_rpc_endpoint,
                 bitcoin_rpc_auth,
-                master_merchant_id,
+                master_merchant_hash,
                 master_key_encryption_key.as_bytes().to_vec(),
                 db_url,
                 network.into(),

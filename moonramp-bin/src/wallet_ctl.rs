@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 
-use moonramp_core::{anyhow, awc, serde, serde_json, uuid};
+use moonramp_core::{anyhow, awc, serde, serde_json, uuid, Hash};
 use moonramp_wallet_rpc::{BitcoinColdWalletType, WalletCreateRequest, WalletLookupRequest};
 
 #[derive(clap::ArgEnum, Clone, Debug, Deserialize, Serialize)]
@@ -72,7 +72,7 @@ pub enum WalletSubcommand {
             conflicts_with("pubkey"),
             required_unless_present("pubkey")
         )]
-        hash: Option<String>,
+        hash: Option<Hash>,
 
         #[clap(short, long, conflicts_with("hash"), required_unless_present("hash"))]
         pubkey: Option<String>,

@@ -1,33 +1,33 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use moonramp_core::{chrono, serde};
+use moonramp_core::{chrono, serde, Hash};
 use moonramp_entity::{invoice, sale};
 use moonramp_wallet::{Currency, Network, Ticker};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct SaleInvoiceRequest {
-    pub hash: String,
+    pub hash: Hash,
     pub uuid: String,
     pub currency: Currency,
     pub amount: f64,
     pub expires_in: Option<i64>,
     pub user_data: Option<Vec<u8>>,
-    pub program: Option<String>,
+    pub program: Option<Hash>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase", untagged)]
 pub enum SaleInvoiceLookupRequest {
-    Hash { hash: String },
+    Hash { hash: Hash },
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct SaleInvoiceResponse {
-    pub hash: String,
-    pub wallet_hash: String,
+    pub hash: Hash,
+    pub wallet_hash: Hash,
     pub ticker: Ticker,
     pub currency: Currency,
     pub network: Network,
@@ -52,8 +52,8 @@ impl SaleInvoiceResponse {
 impl From<invoice::Model> for SaleInvoiceResponse {
     fn from(model: invoice::Model) -> SaleInvoiceResponse {
         SaleInvoiceResponse {
-            hash: model.hash.to_string(),
-            wallet_hash: model.wallet_hash.to_string(),
+            hash: model.hash,
+            wallet_hash: model.wallet_hash,
             ticker: model.ticker.into(),
             currency: model.currency.into(),
             network: model.network.into(),
@@ -73,42 +73,42 @@ impl From<invoice::Model> for SaleInvoiceResponse {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct SaleCaptureRequest {
-    pub hash: String,
+    pub hash: Hash,
     pub uuid: String,
     pub confirmations: Option<i64>,
     pub user_data: Option<Vec<u8>>,
-    pub program: Option<String>,
+    pub program: Option<Hash>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct SaleCaptureAsyncRequest {
-    pub hash: String,
+    pub hash: Hash,
     pub uuid: String,
     pub webhook_id: String,
     pub confirmations: Option<i64>,
     pub user_data: Option<Vec<u8>>,
-    pub program: Option<String>,
+    pub program: Option<Hash>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct SaleCheckoutRequest {
-    pub hash: String,
+    pub hash: Hash,
     pub uuid: String,
     pub webhook_id: String,
     pub confirmations: Option<i64>,
     pub cancel_url: String,
     pub success_url: String,
     pub user_data: Option<Vec<u8>>,
-    pub program: Option<String>,
+    pub program: Option<Hash>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase", untagged)]
 pub enum SaleLookupRequest {
-    Hash { hash: String },
-    InvoiceHash { invoice_hash: String },
+    Hash { hash: Hash },
+    InvoiceHash { invoice_hash: Hash },
 }
 
 //#[derive(Clone, Debug, Deserialize, Serialize)]
@@ -154,9 +154,9 @@ pub enum SaleLookupRequest {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
 pub struct SaleResponse {
-    pub hash: String,
-    pub wallet_hash: String,
-    pub invoice_hash: String,
+    pub hash: Hash,
+    pub wallet_hash: Hash,
+    pub invoice_hash: Hash,
     pub ticker: Ticker,
     pub currency: Currency,
     pub network: Network,
@@ -178,9 +178,9 @@ impl SaleResponse {
 impl From<sale::Model> for SaleResponse {
     fn from(model: sale::Model) -> SaleResponse {
         SaleResponse {
-            hash: model.hash.to_string(),
-            wallet_hash: model.wallet_hash.to_string(),
-            invoice_hash: model.invoice_hash.to_string(),
+            hash: model.hash,
+            wallet_hash: model.wallet_hash,
+            invoice_hash: model.invoice_hash,
             ticker: model.ticker.into(),
             currency: model.currency.into(),
             network: model.network.into(),

@@ -4,7 +4,7 @@ authors = ["MoonRamp Contributors", "Dionysus <fisted-by-dionysus@proton.me>"]
 homepage = "https://moonramp.github.io"
 repository = "https://github.com/moonramp/moonramp"
 readme = "README.md"
-version = "0.1.20"
+version = "0.1.21"
 edition = "2021"
 license = "MIT"
 
@@ -15,6 +15,7 @@ actix-web = { version = "*" }
 jsonrpsee = { version = "*" }
 
 moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib", "http"] }
+moonramp-encryption = { version = "^0.1", path = "../moonramp-encryption" }
 moonramp-entity = { version = "^0.1", path = "../moonramp-entity" }
 
 [dev-dependencies]

@@ -9,11 +9,11 @@ use moonramp_core::{chrono, sea_orm, serde, Hash};
 #[serde(crate = "moonramp_core::serde")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: Hash,
+    pub hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
-    pub merchant_id: String,
+    pub merchant_hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
-    pub key_encryption_key_id: Hash,
+    pub key_encryption_key_hash: Hash,
     pub cipher: super::cipher::Cipher,
     pub key: Vec<u8>,
     pub nonce: Vec<u8>,
@@ -24,14 +24,14 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::key_encryption_key::Entity",
-        from = "Column::KeyEncryptionKeyId",
-        to = "super::key_encryption_key::Column::Id"
+        from = "Column::KeyEncryptionKeyHash",
+        to = "super::key_encryption_key::Column::Hash"
     )]
     KeyEncryptionKey,
     #[sea_orm(
         belongs_to = "super::merchant::Entity",
-        from = "Column::MerchantId",
-        to = "super::merchant::Column::Id"
+        from = "Column::MerchantHash",
+        to = "super::merchant::Column::Hash"
     )]
     Merchant,
 }

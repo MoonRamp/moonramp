@@ -10,9 +10,8 @@ use tokio::{
     fs,
     time::{Duration, Instant},
 };
-use uuid::Uuid;
 
-use moonramp_core::{anyhow, chrono, log, sea_orm, sha3, tokio, uuid};
+use moonramp_core::{anyhow, chrono, log, sea_orm, sha3, tokio, Hash};
 use moonramp_encryption::{
     KeyCustodian, KeyEncryptionKeyCustodian, MasterKeyEncryptionKeyCustodian,
 };
@@ -76,8 +75,8 @@ async fn main() -> anyhow::Result<()> {
                     MasterKeyEncryptionKeyCustodian::new(hasher.finalize().to_vec())?;
                 let kek = if let Some(kek) = key_encryption_key::Entity::find()
                     .filter(
-                        key_encryption_key::Column::MasterKeyEncryptionKeyId
-                            .eq(master_custodian.id()),
+                        key_encryption_key::Column::MasterKeyEncryptionKeyHash
+                            .eq(master_custodian.hash()),
                     )
                     .order_by_desc(key_encryption_key::Column::CreatedAt)
                     .one(&database)
@@ -133,8 +132,11 @@ async fn main() -> anyhow::Result<()> {
 async fn setup_harnessdb(database: &DatabaseConnection) -> anyhow::Result<()> {
     Migrator::fresh(database).await?;
     Migrator::up(database, None).await?;
+    let mut hasher = Sha3_256::new();
+    hasher.update(b"Space Force");
+    let merchant_hash = Hash::try_from(hasher.finalize().to_vec())?;
     merchant::ActiveModel {
-        id: Set(Uuid::new_v4().to_simple().to_string()),
+        hash: Set(merchant_hash),
         name: Set("Space Force".to_string()),
         address: Set("The Moon".to_string()),
         primary_email: Set("mission-control@themoon.com".to_string()),

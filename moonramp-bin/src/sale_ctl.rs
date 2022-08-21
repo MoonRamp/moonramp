@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 
-use moonramp_core::{anyhow, awc, serde, serde_json, uuid};
+use moonramp_core::{anyhow, awc, serde, serde_json, uuid, Hash};
 use moonramp_sale_rpc::{
     SaleCaptureRequest, SaleInvoiceLookupRequest, SaleInvoiceRequest, SaleLookupRequest,
 };
@@ -39,7 +39,7 @@ impl From<Currency> for moonramp_wallet_rpc::Currency {
 pub enum SaleSubcommand {
     Invoice {
         #[clap(short = 'H', long)]
-        hash: String,
+        hash: Hash,
 
         #[clap(short, long, arg_enum)]
         currency: Currency,
@@ -51,27 +51,27 @@ pub enum SaleSubcommand {
         expires_in: Option<i64>,
 
         #[clap(short, long)]
-        program: Option<String>,
+        program: Option<Hash>,
     },
     InvoiceLookup {
         #[clap(short = 'H', long)]
-        hash: String,
+        hash: Hash,
     },
     Capture {
         #[clap(short = 'H', long)]
-        hash: String,
+        hash: Hash,
 
         #[clap(short, long)]
         confirmations: Option<i64>,
 
         #[clap(short, long)]
-        program: Option<String>,
+        program: Option<Hash>,
     },
     Lookup {
         #[clap(short = 'H', long, required_unless_present("invoice-hash"))]
-        hash: Option<String>,
+        hash: Option<Hash>,
         #[clap(short = 'I', long, required_unless_present("hash"))]
-        invoice_hash: Option<String>,
+        invoice_hash: Option<Hash>,
     },
     Version {},
 }

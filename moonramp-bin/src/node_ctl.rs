@@ -3,7 +3,7 @@ use std::sync::Arc;
 use log::{debug, error, info};
 use sea_orm::{entity::*, query::*, DatabaseConnection};
 
-use moonramp_core::{anyhow, log, sea_orm, tokio, NodeId, TunnelName};
+use moonramp_core::{anyhow, log, sea_orm, tokio, Hash, NodeId, TunnelName};
 use moonramp_encryption::{
     KeyCustodian, KeyEncryptionKeyCustodian, MasterKeyEncryptionKeyCustodian,
 };
@@ -19,7 +19,7 @@ pub struct NodeCtl {
     wallet_http_addr: String,
     bitcoin_rpc_endpoint: String,
     bitcoin_rpc_auth: String,
-    master_merchant_id: Arc<String>,
+    master_merchant_hash: Arc<Hash>,
     network: moonramp_wallet_rpc::Network,
 }
 
@@ -31,7 +31,7 @@ impl NodeCtl {
         wallet_http_addr: String,
         bitcoin_rpc_endpoint: String,
         bitcoin_rpc_auth: String,
-        master_merchant_id: String,
+        master_merchant_hash: Hash,
         master_key_encryption_key: Vec<u8>,
         db_url: String,
         network: moonramp_wallet_rpc::Network,
@@ -42,7 +42,8 @@ impl NodeCtl {
             let master_custodian = MasterKeyEncryptionKeyCustodian::new(master_key_encryption_key)?;
             let kek = if let Some(kek) = key_encryption_key::Entity::find()
                 .filter(
-                    key_encryption_key::Column::MasterKeyEncryptionKeyId.eq(master_custodian.id()),
+                    key_encryption_key::Column::MasterKeyEncryptionKeyHash
+                        .eq(master_custodian.hash()),
                 )
                 .order_by_desc(key_encryption_key::Column::CreatedAt)
                 .one(&database)
@@ -67,7 +68,7 @@ impl NodeCtl {
             wallet_http_addr,
             bitcoin_rpc_endpoint,
             bitcoin_rpc_auth,
-            master_merchant_id: Arc::new(master_merchant_id),
+            master_merchant_hash: Arc::new(master_merchant_hash),
             network,
         })
     }
@@ -88,6 +89,7 @@ impl NodeCtl {
             )?;
         registry.register(TunnelName::Program, program_public_tx);
         let program_http = moonramp_program_rpc::ProgramHttpServer::new(
+            self.kek_custodian.clone(),
             self.database.clone(),
             registry_tx.clone(),
             &self.program_http_addr,
@@ -98,7 +100,7 @@ impl NodeCtl {
         debug!("Creating sale service");
         let (sale_public_tx, sale_rpc_service) = moonramp_sale_rpc::SaleRpcService::new(
             self.node_id.clone(),
-            self.master_merchant_id.clone(),
+            self.master_merchant_hash.clone(),
             self.kek_custodian.clone(),
             self.database.clone(),
             self.bitcoin_rpc_endpoint.clone(),
@@ -107,6 +109,7 @@ impl NodeCtl {
         )?;
         registry.register(TunnelName::Sale, sale_public_tx);
         let sale_http = moonramp_sale_rpc::SaleHttpServer::new(
+            self.kek_custodian.clone(),
             self.database.clone(),
             registry_tx.clone(),
             &self.sale_http_addr,
@@ -125,6 +128,7 @@ impl NodeCtl {
         )?;
         registry.register(TunnelName::Wallet, wallet_public_tx);
         let wallet_http = moonramp_wallet_rpc::WalletHttpServer::new(
+            self.kek_custodian.clone(),
             self.database.clone(),
             registry_tx.clone(),
             &self.wallet_http_addr,

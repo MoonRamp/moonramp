@@ -6,6 +6,10 @@ use std::{error::Error, fmt};
 
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use anyhow::anyhow;
+use argon2::{
+    password_hash::{PasswordHash, PasswordVerifier},
+    Argon2,
+};
 use log::{debug, warn};
 use sea_orm::{entity::*, query::*, DatabaseConnection};
 use serde::{Deserialize, Serialize};
@@ -16,10 +20,12 @@ use tokio::{
 };
 
 use moonramp_core::{
-    actix_web, anyhow, log, sea_orm, serde, serde_json, tokio, NetworkTunnel, NetworkTunnelChannel,
-    NetworkTunnelSender, RpcTunnel, Sender, TunnelName, TunnelTopic,
+    actix_web, anyhow, argon2, log, sea_orm, serde, serde_json, tokio, ApiCredential,
+    NetworkTunnel, NetworkTunnelChannel, NetworkTunnelSender, RpcTunnel, Sender, TunnelName,
+    TunnelTopic,
 };
-use moonramp_entity::{api_token, role};
+use moonramp_encryption::{EncryptionKeyCustodian, KeyCustodian, KeyEncryptionKeyCustodian};
+use moonramp_entity::{api_token, encryption_key, role};
 
 /// Http Error Codes
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -96,15 +102,53 @@ pub fn check_roles(roles: &[role::Model], resource: role::Resource, scope: role:
 
 /// Retrieves the api_token::Model and role::Model from the data store
 pub async fn api_token(
-    token: &str,
+    bearer_token: &str,
+    kek_custodian: &KeyEncryptionKeyCustodian,
     database: &DatabaseConnection,
 ) -> anyhow::Result<Option<(api_token::Model, Vec<role::Model>)>> {
-    Ok(api_token::Entity::find()
-        .filter(api_token::Column::Token.eq(token))
+    let api_credential = ApiCredential::from_bearer(bearer_token)?;
+    let t_r = api_token::Entity::find()
+        .filter(api_token::Column::Hash.eq(api_credential.hash))
         .find_with_related(role::Entity)
         .all(database)
         .await?
-        .pop())
+        .pop();
+
+    match t_r {
+        Some((token, roles)) => {
+            let t_ek = encryption_key::Entity::find()
+                .filter(
+                    Condition::all()
+                        .add(encryption_key::Column::Hash.eq(token.encryption_key_hash.clone()))
+                        .add(encryption_key::Column::KeyEncryptionKeyHash.eq(kek_custodian.hash())),
+                )
+                .all(database)
+                .await?
+                .into_iter()
+                .next();
+
+            if let Some(t_ek) = t_ek {
+                let t_ek_custodian = EncryptionKeyCustodian::new(
+                    kek_custodian.unlock(t_ek)?.secret.to_vec(),
+                    token.cipher.clone(),
+                )?;
+                let parsed_hash = t_ek_custodian.decrypt(&token.nonce, &token.blob)?;
+                let parsed_hash = PasswordHash::new(std::str::from_utf8(&parsed_hash)?)?;
+
+                if Argon2::default()
+                    .verify_password(&api_credential.secret, &parsed_hash)
+                    .is_ok()
+                {
+                    Ok(Some((token, roles)))
+                } else {
+                    Ok(None)
+                }
+            } else {
+                Ok(None)
+            }
+        }
+        None => Ok(None),
+    }
 }
 
 /// Sends a request to the registry channel, awaits a response, and deserializes the response into a json blob

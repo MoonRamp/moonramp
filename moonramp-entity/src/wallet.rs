@@ -11,7 +11,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
-    pub merchant_id: String,
+    pub merchant_hash: Hash,
     #[sea_orm(unique, indexed, column_type = "Text")]
     pub pubkey: String,
     pub ticker: super::ticker::Ticker,
@@ -19,7 +19,7 @@ pub struct Model {
     pub wallet_type: WalletType,
     pub cipher: super::cipher::Cipher,
     #[sea_orm(indexed, column_type = "Text")]
-    pub encryption_key_id: Hash,
+    pub encryption_key_hash: Hash,
     pub blob: Vec<u8>,
     pub nonce: Vec<u8>,
     pub created_at: DateTime<Utc>,
@@ -39,14 +39,14 @@ pub enum WalletType {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::encryption_key::Entity",
-        from = "Column::EncryptionKeyId",
-        to = "super::encryption_key::Column::Id"
+        from = "Column::EncryptionKeyHash",
+        to = "super::encryption_key::Column::Hash"
     )]
     EncryptionKey,
     #[sea_orm(
         belongs_to = "super::merchant::Entity",
-        from = "Column::MerchantId",
-        to = "super::merchant::Column::Id"
+        from = "Column::MerchantHash",
+        to = "super::merchant::Column::Hash"
     )]
     Merchant,
 }

@@ -9,9 +9,9 @@ use moonramp_core::{chrono, sea_orm, serde, Hash};
 #[serde(crate = "moonramp_core::serde")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: Hash,
+    pub hash: Hash,
     #[sea_orm(indexed, column_type = "Text")]
-    pub master_key_encryption_key_id: Hash,
+    pub master_key_encryption_key_hash: Hash,
     pub cipher: super::cipher::Cipher,
     pub key: Vec<u8>,
     pub nonce: Vec<u8>,
