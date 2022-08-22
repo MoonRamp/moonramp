@@ -10,6 +10,7 @@
   - [Docker](./install/install_docker.md)
   - [Binary](./install/install_bin.md)
   - [Source](./install/install_source.md)
+  - [Crates.io](./install/install_cratesio.md)
 
 # User Guide
 

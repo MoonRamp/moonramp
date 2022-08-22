@@ -56,3 +56,32 @@ jobs:
       run: |
         go install github.com/tcnksm/ghr@latest
         ghr -t ${{secrets.GITHUB_TOKEN}} -u MoonRamp -r moonramp -c ${GITHUB_SHA} -delete ${GITHUB_REF_NAME} out
+  cargo-release:
+    runs-on: ubuntu-latest
+    env:
+      CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Publish Moonramp Crates
+      run: |
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-core
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-encryption
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-entity
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-migration
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-wallet
+        pushd programs/lunar
+        cargo publish --token $CRATES_IO_TOKEN
+        popd
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-gateway
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-program
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-sale
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-registry
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-http
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-rpc
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-program-rpc
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-wallet-rpc
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp-sale-rpc
+        cargo publish --token $CRATES_IO_TOKEN -p moonramp
+        pushd programs/default-sale
+        cargo publish --token $CRATES_IO_TOKEN
+        popd

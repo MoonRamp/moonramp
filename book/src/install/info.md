@@ -6,8 +6,7 @@ Please choose one of the following install options.
 
 ## Install Methods
 
-- [Docker image](./install_docker.md)
-
 - [Binaries](./install_bin.md)
-
 - [Compile from source](./install_source.md)
+- [Crates.io](./install_cratesio.md)
+- [Docker image](./install_docker.md)
