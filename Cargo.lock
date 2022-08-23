@@ -1085,9 +1085,9 @@ dependencies = [
 
 [[package]]
 name = "cpufeatures"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1079fb8528d9f9c888b1e8aa651e6e079ade467323d58f75faf1d30b1808f540"
+checksum = "dc948ebb96241bb40ab73effeb80d9f93afaad49359d159a5e61be51619fe813"
 dependencies = [
  "libc",
 ]
@@ -2408,7 +2408,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "actix-rt",
  "clap 3.2.17",
@@ -2427,7 +2427,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2466,7 +2466,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2474,14 +2474,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-gateway"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-lunar",
@@ -2489,7 +2489,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-http"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.15.1",
@@ -2501,7 +2501,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-lunar-core",
  "moonramp-lunar-macro",
@@ -2509,7 +2509,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar-core"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -2518,7 +2518,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar-macro"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2527,7 +2527,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-migration"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "clap 3.2.17",
  "moonramp-core",
@@ -2538,7 +2538,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-gateway",
@@ -2547,7 +2547,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-rpc"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2564,14 +2564,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-registry"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-rpc"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "jsonrpsee 0.14.0",
  "moonramp-core",
@@ -2579,7 +2579,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2589,7 +2589,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale-rpc"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2608,7 +2608,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2616,7 +2616,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet-rpc"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "actix-web",
  "jsonrpsee 0.14.0",
@@ -2765,9 +2765,9 @@ checksum = "9ff7415e9ae3fff1225851df9e0d9e4e5479f947619774677a63572e55e80eff"
 
 [[package]]
 name = "ouroboros"
-version = "0.15.2"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7425ea87a1e31df63a27b6d31e21a35a9003268032a876465e8d43c2364b0de2"
+checksum = "55190d158a4c09a30bdb5e3b2c50a37f299b8dd9f59d0e1510782732e8bf8877"
 dependencies = [
  "aliasable",
  "ouroboros_macro",
@@ -2775,9 +2775,9 @@ dependencies = [
 
 [[package]]
 name = "ouroboros_macro"
-version = "0.15.2"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "734aa7a4a6390b162112523cac2923a18e4f23b917880a68c826bf6e8bf48f06"
+checksum = "816c4556bb87c05aad7710d02e88ed50a93f837d73dfe417ec5e890a9e1bbec7"
 dependencies = [
  "Inflector",
  "proc-macro-error",
@@ -2936,10 +2936,11 @@ checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
 name = "polling"
-version = "2.2.0"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "685404d509889fade3e86fe3a5803bca2ec09b0c0778d5ada6ec8bf7a8de5259"
+checksum = "899b00b9c8ab553c743b3e11e87c5c7d423b2a2de229ba95b24a756344748011"
 dependencies = [
+ "autocfg 1.1.0",
  "cfg-if 1.0.0",
  "libc",
  "log",
@@ -3602,9 +3603,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.83"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38dd04e3c8279e75b31ef29dbdceebfe5ad89f4d0937213c53f7d49d01b3d5a7"
+checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
 dependencies = [
  "itoa",
  "ryu",

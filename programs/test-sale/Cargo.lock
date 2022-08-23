@@ -227,7 +227,7 @@ checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "anyhow",
  "argon2",
@@ -246,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-lunar-core",
  "moonramp-lunar-macro",
@@ -254,7 +254,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar-core"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -263,7 +263,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar-macro"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -272,14 +272,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-test-sale"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-lunar",
 ]
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "moonramp-core",
 ]
@@ -439,9 +439,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.83"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38dd04e3c8279e75b31ef29dbdceebfe5ad89f4d0937213c53f7d49d01b3d5a7"
+checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
 dependencies = [
  "itoa",
  "ryu",

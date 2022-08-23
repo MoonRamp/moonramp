@@ -70,6 +70,8 @@ jobs:
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-migration
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-wallet
         pushd programs/lunar
+        cargo publish --token $CRATES_IO_TOKEN --manifest-path crates/lunar-core
+        cargo publish --token $CRATES_IO_TOKEN --manifest-path crates/lunar-macro
         cargo publish --token $CRATES_IO_TOKEN
         popd
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-gateway
