@@ -62,27 +62,41 @@ jobs:
       CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
     steps:
     - uses: actions/checkout@v3
-    - name: Publish Moonramp Crates
+    - name: Publish Moonramp Core
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-core
+    - name: Publish Moonramp Entity
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-entity
+    - name: Publish Moonramp Encryption
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-encryption
+    - name: Publish Moonramp Migration
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-migration
+    - name: Publish Moonramp Wallet
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-wallet
+    - name: Publish Moonramp Lunar
       run: |
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-core
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-encryption
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-entity
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-migration
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-wallet
         pushd programs/lunar
-        cargo publish --token $CRATES_IO_TOKEN --manifest-path crates/lunar-core
-        cargo publish --token $CRATES_IO_TOKEN --manifest-path crates/lunar-macro
+        cargo publish --token $CRATES_IO_TOKEN --manifest-path crates/lunar-core/Cargo.toml
+        cargo publish --token $CRATES_IO_TOKEN --manifest-path crates/lunar-macro/Cargo.toml
         cargo publish --token $CRATES_IO_TOKEN
         popd
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-gateway
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-program
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-sale
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-registry
-        cargo publish --token $CRATES_IO_TOKEN -p moonramp-http
+    - name: Publish Moonramp Gateway
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-gateway
+    - name: Publish Moonramp Program
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-program
+    - name: Publish Moonramp Sale
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-sale
+    - name: Publish Moonramp Registry
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-registry
+    - name: Publish Moonramp Http
+      run: cargo publish --token $CRATES_IO_TOKEN -p moonramp-http
+    - name: Publish Moonramp Rpc
+      run: |
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-rpc
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-program-rpc
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-wallet-rpc
         cargo publish --token $CRATES_IO_TOKEN -p moonramp-sale-rpc
+    - name: Publish Moonramp
+      run: |
         cargo publish --token $CRATES_IO_TOKEN -p moonramp
         pushd programs/default-sale
         cargo publish --token $CRATES_IO_TOKEN

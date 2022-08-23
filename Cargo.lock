@@ -2075,12 +2075,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jsonrpsee"
-version = "0.15.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bd0d559d5e679b1ab2f869b486a11182923863b1b3ee8b421763cdd707b783a"
-
-[[package]]
 name = "jsonrpsee-core"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2447,7 +2441,7 @@ dependencies = [
  "futures",
  "hkdf",
  "hyper",
- "jsonrpsee 0.14.0",
+ "jsonrpsee",
  "log",
  "lz4_flex",
  "monero",
@@ -2491,8 +2485,6 @@ dependencies = [
 name = "moonramp-http"
 version = "0.1.22"
 dependencies = [
- "actix-web",
- "jsonrpsee 0.15.1",
  "moonramp-core",
  "moonramp-encryption",
  "moonramp-entity",
@@ -2550,7 +2542,7 @@ name = "moonramp-program-rpc"
 version = "0.1.22"
 dependencies = [
  "actix-web",
- "jsonrpsee 0.14.0",
+ "jsonrpsee",
  "moonramp-core",
  "moonramp-encryption",
  "moonramp-entity",
@@ -2573,7 +2565,7 @@ dependencies = [
 name = "moonramp-rpc"
 version = "0.1.22"
 dependencies = [
- "jsonrpsee 0.14.0",
+ "jsonrpsee",
  "moonramp-core",
 ]
 
@@ -2592,7 +2584,7 @@ name = "moonramp-sale-rpc"
 version = "0.1.22"
 dependencies = [
  "actix-web",
- "jsonrpsee 0.14.0",
+ "jsonrpsee",
  "moonramp-core",
  "moonramp-encryption",
  "moonramp-entity",
@@ -2619,7 +2611,7 @@ name = "moonramp-wallet-rpc"
 version = "0.1.22"
 dependencies = [
  "actix-web",
- "jsonrpsee 0.14.0",
+ "jsonrpsee",
  "moonramp-core",
  "moonramp-encryption",
  "moonramp-entity",

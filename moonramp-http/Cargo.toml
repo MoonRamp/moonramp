@@ -10,11 +10,6 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-# Needed for macro usage
-actix-web = { version = "*" }
-# Needed for macro usage
-jsonrpsee = { version = "*" }
-
 moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["lib", "http"] }
 moonramp-encryption = { version = "^0.1", path = "../moonramp-encryption" }
 moonramp-entity = { version = "^0.1", path = "../moonramp-entity" }
