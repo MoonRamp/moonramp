@@ -204,7 +204,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec 1.9.0",
  "socket2",
- "time 0.3.13",
+ "time 0.3.14",
  "url",
 ]
 
@@ -563,9 +563,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "awc"
-version = "3.0.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65c60c44fbf3c8cee365e86b97d706e513b733c4eeb16437b45b88d2fffe889a"
+checksum = "80ca7ff88063086d2e2c70b9f3b29b2fcd999bac68ac21731e66781970d68519"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -645,9 +645,9 @@ checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 
 [[package]]
 name = "base64ct"
-version = "1.5.1"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bdca834647821e0b13d9539a8634eb62d3501b6b6c2cec1722786ee6671b851"
+checksum = "ea2b2456fd614d856680dcd9fcc660a51a820fa09daef2e49772b56a193c8474"
 
 [[package]]
 name = "bech32"
@@ -1064,7 +1064,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
 dependencies = [
  "percent-encoding",
- "time 0.3.13",
+ "time 0.3.14",
  "version_check",
 ]
 
@@ -2402,7 +2402,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "actix-rt",
  "clap 3.2.17",
@@ -2421,7 +2421,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-core"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "actix-cors",
  "actix-rt",
@@ -2438,6 +2438,7 @@ dependencies = [
  "bs58",
  "chacha20poly1305",
  "chrono",
+ "curve25519-dalek",
  "futures",
  "hkdf",
  "hyper",
@@ -2460,7 +2461,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-encryption"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2468,14 +2469,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-entity"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-gateway"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-lunar",
@@ -2483,7 +2484,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-http"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-encryption",
@@ -2493,7 +2494,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-lunar-core",
  "moonramp-lunar-macro",
@@ -2501,7 +2502,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar-core"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-wallet",
@@ -2510,7 +2511,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-lunar-macro"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2519,7 +2520,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-migration"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "clap 3.2.17",
  "moonramp-core",
@@ -2530,7 +2531,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-gateway",
@@ -2539,7 +2540,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-program-rpc"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "actix-web",
  "jsonrpsee",
@@ -2556,14 +2557,14 @@ dependencies = [
 
 [[package]]
 name = "moonramp-registry"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
 ]
 
 [[package]]
 name = "moonramp-rpc"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "jsonrpsee",
  "moonramp-core",
@@ -2571,7 +2572,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2581,7 +2582,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-sale-rpc"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "actix-web",
  "jsonrpsee",
@@ -2600,7 +2601,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "moonramp-core",
  "moonramp-entity",
@@ -2608,7 +2609,7 @@ dependencies = [
 
 [[package]]
 name = "moonramp-wallet-rpc"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "actix-web",
  "jsonrpsee",
@@ -3731,9 +3732,9 @@ checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
 name = "socket2"
-version = "0.4.4"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66d72b759436ae32898a2af0a14218dbf55efde3feeb170eb623637db85ee1e0"
+checksum = "10c98bba371b9b22a71a9414e420f92ddeb2369239af08200816169d5e2dd7aa"
 dependencies = [
  "libc",
  "winapi",
@@ -4115,9 +4116,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db76ff9fa4b1458b3c7f077f3ff9887394058460d21e634355b273aaf11eea45"
+checksum = "3c3f9a28b618c3a6b9251b6908e9c99e04b9e5c02e6581ccbb67d59c34ef7f9b"
 dependencies = [
  "itoa",
  "libc",

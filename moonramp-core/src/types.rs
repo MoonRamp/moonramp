@@ -2,8 +2,9 @@
 use std::{convert::TryFrom, ops::Deref, str::FromStr};
 use std::{fmt, hash::Hash as StdHash, net::SocketAddr};
 
-#[cfg(feature = "serialization")]
+#[cfg(all(feature = "serialization", feature = "crypto"))]
 use serde::{de, Deserializer, Serializer};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "async-core")]
 use tokio::sync::{mpsc, oneshot};

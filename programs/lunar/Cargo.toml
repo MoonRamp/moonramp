@@ -5,7 +5,7 @@ homepage = "https://moonramp.github.io"
 repository = "https://github.com/moonramp/moonramp"
 description = "Crypto Payment Gateway WASM Bindings"
 readme = "README.md"
-version = "0.1.22"
+version = "0.1.23"
 edition = "2021"
 license = "MIT"
 

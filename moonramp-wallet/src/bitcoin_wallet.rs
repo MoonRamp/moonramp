@@ -12,7 +12,7 @@ use bitcoin::{
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
-use moonramp_core::{anyhow, bip39, bitcoin, rand, serde};
+use moonramp_core::{anyhow, bip39, bitcoin, bs58, rand, serde};
 
 use crate::{BitcoinColdWalletType, Network, Ticker, WalletType};
 
@@ -28,16 +28,47 @@ pub struct BitcoinHotWallet {
 impl fmt::Debug for BitcoinHotWallet {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match ExtendedPubKey::decode(&self.xpub) {
-            Ok(xpub) => write!(f, "{}", xpub),
+            Ok(xpub) => write!(
+                f,
+                "{}",
+                bs58::encode(xpub.to_pub().to_bytes()).into_string()
+            ),
             Err(err) => write!(f, "Invalid BitcoinHotWallet({})", err),
         }
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
+impl fmt::Display for BitcoinHotWallet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Eq, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum BitcoinColdWallet {
     XPubkey { xpub: String, index: u64 },
+}
+
+impl fmt::Debug for BitcoinColdWallet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            BitcoinColdWallet::XPubkey { xpub, .. } => match ExtendedPubKey::from_str(&xpub) {
+                Ok(xpub) => write!(
+                    f,
+                    "{}",
+                    bs58::encode(xpub.to_pub().to_bytes()).into_string()
+                ),
+                Err(err) => write!(f, "Invalid BitcoinHotWallet({})", err),
+            },
+        }
+    }
+}
+
+impl fmt::Display for BitcoinColdWallet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
@@ -45,6 +76,19 @@ pub enum BitcoinColdWallet {
 pub enum BitcoinWallet {
     Hot(Ticker, Network, BitcoinHotWallet),
     Cold(Ticker, Network, BitcoinColdWallet),
+}
+
+impl fmt::Display for BitcoinWallet {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            BitcoinWallet::Hot(_, _, w) => {
+                write!(f, "{}", w)
+            }
+            BitcoinWallet::Cold(_, _, w) => {
+                write!(f, "{}", w)
+            }
+        }
+    }
 }
 
 impl BitcoinWallet {
@@ -105,11 +149,14 @@ impl BitcoinWallet {
     pub fn pubkey(&self) -> String {
         match self {
             BitcoinWallet::Hot(_, _, w) => match ExtendedPubKey::decode(&w.xpub) {
-                Ok(xpub) => xpub.to_string(),
+                Ok(xpub) => xpub.to_pub().to_string(),
                 Err(_) => "Invalid BitcoinHotWallet".to_string(),
             },
             BitcoinWallet::Cold(_, _, w) => match w {
-                BitcoinColdWallet::XPubkey { xpub, .. } => xpub,
+                BitcoinColdWallet::XPubkey { xpub, .. } => match ExtendedPubKey::from_str(xpub) {
+                    Ok(xpub) => xpub.to_pub().to_string(),
+                    Err(_) => "Invalid BitcoinHotWallet".to_string(),
+                },
             }
             .to_string(),
         }
@@ -238,4 +285,67 @@ impl BitcoinWallet {
             },
         }
     }
+
+    pub fn addr(&self) -> anyhow::Result<(ExtendedPubKey, String)> {
+        match self {
+            BitcoinWallet::Hot(ticker, network, w) => {
+                match (ticker, ExtendedPubKey::decode(&w.xpub)) {
+                    (Ticker::BTC, Ok(xpub)) => Ok((
+                        xpub,
+                        Address::p2wpkh(&xpub.to_pub(), network.into())?.to_string(),
+                    )),
+                    (Ticker::BCH, Ok(xpub)) => Ok((
+                        xpub,
+                        Address::p2pkh(&xpub.to_pub(), network.into()).to_string(),
+                    )),
+                    _ => Err(anyhow!("Invalid BitcoinHotWallet")),
+                }
+            }
+            BitcoinWallet::Cold(_, network, w) => match w {
+                BitcoinColdWallet::XPubkey { xpub, .. } => match ExtendedPubKey::from_str(xpub) {
+                    Ok(xpub) => Ok((
+                        xpub,
+                        Address::p2pkh(&xpub.to_pub(), network.into()).to_string(),
+                    )),
+                    Err(_) => Err(anyhow!("Invalid BitcoinColdWallet")),
+                },
+            },
+        }
+    }
+}
+
+#[test]
+fn test_hot_wallet() {
+    let password = "moonramp".to_string();
+    let entropy = [7u8; 32];
+    let mnemonic = Mnemonic::from_entropy(&entropy).expect("Invalid Mnemonic");
+    let seed = mnemonic.to_seed(password.clone());
+    let key = ExtendedPrivKey::new_master(Network::Mainnet.into(), &seed)
+        .expect("Invalid ExtendedPrivKey");
+    let secp = Secp256k1::new();
+    let w = BitcoinHotWallet {
+        mnemonic: mnemonic.to_entropy(),
+        password,
+        xpub: ExtendedPubKey::from_priv(&secp, &key).encode().to_vec(),
+        index: 0,
+    };
+    assert_eq!(
+        w.to_string(),
+        "nJGeazodvtM7cSQcwr4VbmgWp2PnUQtLzkVDV6FLnSD3"
+    );
+
+    let mut mainnet_w = BitcoinWallet::Hot(Ticker::BTC, Network::Mainnet, w);
+    assert_eq!(
+        mainnet_w.addr().expect("Invalid Addr").1,
+        "bc1qxgqzetpjjs05g7p30nwvtzwscvg9lmn2e2z03z"
+    );
+
+    assert_eq!(
+        mainnet_w.next_addr().expect("Invalid Addr").1,
+        "bc1qezpjaja9kp8qfdkh824a0y3d4xg2fj05v0r7s0"
+    );
+    assert_eq!(
+        mainnet_w.next_addr().expect("Invalid Addr").1,
+        "bc1qufnwcpajzuzg0qp0lhj5uawdmxpqlw0ersa68p"
+    );
 }

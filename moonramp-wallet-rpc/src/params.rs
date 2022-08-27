@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use moonramp_core::{chrono, serde, Hash};
 use moonramp_entity::wallet;
 
-use crate::{BitcoinColdWalletType, Network, Ticker, WalletType};
+use crate::{BitcoinColdWalletType, MoneroColdWalletType, Network, Ticker, WalletType};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde", rename_all = "camelCase")]
@@ -26,6 +26,12 @@ pub enum WalletCreateRequest {
     //    ticker: ticker::Ticker,
     //    pubkey: String,
     //},
+    XmrHot,
+    #[serde(rename_all = "camelCase")]
+    XmrCold {
+        view_key: String,
+        cold_type: MoneroColdWalletType,
+    },
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

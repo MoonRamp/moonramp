@@ -18,7 +18,7 @@ use moonramp_encryption::{
 use moonramp_entity::{cipher::Cipher, wallet};
 use moonramp_rpc::{IntoRpcResult, RpcService};
 
-use crate::{params::*, BitcoinWallet, Network, Ticker, Wallet};
+use crate::{params::*, BitcoinWallet, MoneroWallet, Network, Ticker, Wallet};
 
 #[rpc(server)]
 pub trait WalletRpc {
@@ -87,6 +87,13 @@ impl WalletRpcServer for WalletRpcImpl {
                 BitcoinWallet::new_cold(Ticker::BCH, network, pubkey, cold_type)
                     .into_rpc_result()?,
             ),
+            WalletCreateRequest::XmrHot => {
+                Wallet::Monero(MoneroWallet::new_hot(network).into_rpc_result()?)
+            }
+            WalletCreateRequest::XmrCold {
+                view_key,
+                cold_type,
+            } => todo!(),
         };
 
         let ek_custodian = EncryptionKeyCustodian::new(
@@ -279,6 +286,11 @@ mod tests {
             serde_json::Value::String("Hot".to_string())
         );
 
+        let w =
+            BitcoinWallet::new_hot(Ticker::BTC, Network::Testnet).expect("Invalid BitcoinWallet");
+        let mut hasher = Sha3_256::new();
+        hasher.update(w.pubkey().as_bytes());
+        let wallet_hash = Hash::try_from(hasher.finalize().to_vec()).expect("Invalid Hash");
         let result = rpc
             .raw_json_request(
                 &serde_json::to_string(&json!({
@@ -288,7 +300,7 @@ mod tests {
                         "merchant_hash": merchant_hash,
                         "request": {
                             "btcCold": {
-                                "pubkey": "new_pubkey",
+                                "pubkey": w.addr().expect("Invalid BitcoinWallet").0.to_string(),
                                 "coldType": "XPUBKEY",
                             },
                         },
@@ -305,11 +317,11 @@ mod tests {
         assert_eq!(json_rpc["error"], serde_json::Value::Null);
         assert_eq!(
             json_rpc["result"]["hash"],
-            serde_json::Value::String("7NcdhjfT5KdoZZBBX3f9Ne5DNU9L8LqVX9G9CtdiNdaq".to_string())
+            serde_json::Value::String(wallet_hash.to_string())
         );
         assert_eq!(
             json_rpc["result"]["pubkey"],
-            serde_json::Value::String("new_pubkey".to_string())
+            serde_json::Value::String(w.pubkey())
         );
         assert_eq!(
             json_rpc["result"]["ticker"],
@@ -348,7 +360,7 @@ mod tests {
         assert_eq!(json_rpc["result"], serde_json::Value::Null);
         assert_eq!(
             json_rpc["error"],
-            json!({"code": -32602, "message": "unknown variant `Invalid`, expected one of `btcHot`, `btcCold`, `bchHot`, `bchCold` at line 1 column 83"})
+            json!({"code": -32602, "message": "unknown variant `Invalid`, expected one of `btcHot`, `btcCold`, `bchHot`, `bchCold`, `xmrHot`, `xmrCold` at line 1 column 83"})
         );
     }
 

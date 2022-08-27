@@ -202,6 +202,39 @@ impl From<&mut Network> for bitcoin::Network {
     }
 }
 
+#[cfg(feature = "monero")]
+impl From<Network> for monero::Network {
+    fn from(n: Network) -> monero::Network {
+        match n {
+            Network::Mainnet => monero::Network::Mainnet,
+            Network::Testnet => monero::Network::Stagenet,
+            Network::Regtest => monero::Network::Testnet,
+        }
+    }
+}
+
+#[cfg(feature = "monero")]
+impl From<&Network> for monero::Network {
+    fn from(n: &Network) -> monero::Network {
+        match n {
+            Network::Mainnet => monero::Network::Mainnet,
+            Network::Testnet => monero::Network::Stagenet,
+            Network::Regtest => monero::Network::Testnet,
+        }
+    }
+}
+
+#[cfg(feature = "monero")]
+impl From<&mut Network> for monero::Network {
+    fn from(n: &mut Network) -> monero::Network {
+        match n {
+            Network::Mainnet => monero::Network::Mainnet,
+            Network::Testnet => monero::Network::Stagenet,
+            Network::Regtest => monero::Network::Testnet,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum WalletType {
@@ -249,11 +282,22 @@ pub enum BitcoinColdWalletType {
     //P2WPKH,
 }
 
+#[cfg(feature = "monero")]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(crate = "moonramp_core::serde", rename_all = "UPPERCASE")]
+pub enum MoneroColdWalletType {
+    ViewKey, //P2PKH,
+             //P2SHWPKH,
+             //P2WPKH,
+}
+
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
 pub enum Wallet {
     #[cfg(feature = "bitcoin")]
     Bitcoin(bitcoin_wallet::BitcoinWallet),
+    #[cfg(feature = "monero")]
+    Monero(monero_wallet::MoneroWallet),
 }
 
 impl Wallet {
@@ -261,6 +305,8 @@ impl Wallet {
         match self {
             #[cfg(feature = "bitcoin")]
             Wallet::Bitcoin(w) => w.pubkey(),
+            #[cfg(feature = "monero")]
+            Wallet::Monero(w) => w.pubkey(),
         }
     }
 
@@ -268,6 +314,8 @@ impl Wallet {
         match self {
             #[cfg(feature = "bitcoin")]
             Wallet::Bitcoin(w) => w.ticker(),
+            #[cfg(feature = "monero")]
+            Wallet::Monero(w) => w.ticker(),
         }
     }
 
@@ -275,6 +323,8 @@ impl Wallet {
         match self {
             #[cfg(feature = "bitcoin")]
             Wallet::Bitcoin(w) => w.network(),
+            #[cfg(feature = "monero")]
+            Wallet::Monero(w) => w.network(),
         }
     }
 
@@ -282,6 +332,8 @@ impl Wallet {
         match self {
             #[cfg(feature = "bitcoin")]
             Wallet::Bitcoin(w) => w.wallet_type(),
+            #[cfg(feature = "monero")]
+            Wallet::Monero(w) => w.wallet_type(),
         }
     }
 }

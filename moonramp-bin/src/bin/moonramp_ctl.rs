@@ -187,6 +187,7 @@ async fn main() -> anyhow::Result<()> {
                                 cold_type: cold_type.try_into()?,
                             }
                         }
+                        (Ticker::XMR, WalletType::Hot, None, None) => WalletCreateRequest::XmrHot,
                         _ => todo!(),
                     };
                     wallet.create(req).await?;

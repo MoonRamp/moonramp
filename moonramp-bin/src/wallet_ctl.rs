@@ -7,7 +7,9 @@ use serde_json::json;
 use uuid::Uuid;
 
 use moonramp_core::{anyhow, awc, serde, serde_json, uuid, Hash};
-use moonramp_wallet_rpc::{BitcoinColdWalletType, WalletCreateRequest, WalletLookupRequest};
+use moonramp_wallet_rpc::{
+    BitcoinColdWalletType, MoneroColdWalletType, WalletCreateRequest, WalletLookupRequest,
+};
 
 #[derive(clap::ArgEnum, Clone, Debug, Deserialize, Serialize)]
 #[serde(crate = "moonramp_core::serde")]
@@ -16,6 +18,7 @@ pub enum Ticker {
     BCH,
     ETH,
     ETC,
+    XMR,
 }
 
 #[derive(clap::ArgEnum, Clone, Debug, Deserialize, Serialize)]
@@ -34,6 +37,7 @@ pub enum WalletColdType {
     //BtcP2SHWPKH,
     //BtcP2WPKH,
     //BthP2PKH,
+    XmrView,
 }
 
 impl TryFrom<WalletColdType> for BitcoinColdWalletType {
@@ -42,10 +46,17 @@ impl TryFrom<WalletColdType> for BitcoinColdWalletType {
         match cold_type {
             WalletColdType::BtcXPub => Ok(BitcoinColdWalletType::XPubkey),
             WalletColdType::BchXPub => Ok(BitcoinColdWalletType::XPubkey),
-            //WalletColdType::BtcP2PKH => Ok(BitcoinColdWalletType::P2PKH),
-            //WalletColdType::BtcP2SHWPKH => Ok(BitcoinColdWalletType::P2SHWPKH),
-            //WalletColdType::BtcP2WPKH => Ok(BitcoinColdWalletType::P2WPKH),
-            //WalletColdType::BthP2PKH => Ok(BitcoinColdWalletType::P2PKH),
+            w => Err(anyhow!("{:?} is not a BitcoinColdWalletType", w)),
+        }
+    }
+}
+
+impl TryFrom<WalletColdType> for MoneroColdWalletType {
+    type Error = anyhow::Error;
+    fn try_from(cold_type: WalletColdType) -> anyhow::Result<MoneroColdWalletType> {
+        match cold_type {
+            WalletColdType::XmrView => Ok(MoneroColdWalletType::ViewKey),
+            w => Err(anyhow!("{:?} is not a MoneroColdWalletType", w)),
         }
     }
 }

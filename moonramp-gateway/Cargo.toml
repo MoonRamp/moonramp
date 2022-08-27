@@ -5,14 +5,15 @@ homepage = "https://moonramp.github.io"
 repository = "https://github.com/moonramp/moonramp"
 description = "Crypto Payment Gateway"
 readme = "README.md"
-version = "0.1.22"
+version = "0.1.23"
 edition = "2021"
 license = "MIT"
 
 [features]
 bitcoin = ["moonramp-core/crypto-currency-bitcoin"]
+monero = ["moonramp-core/crypto-currency-monero"]
 
-all-currencies = ["bitcoin"]
+all-currencies = ["bitcoin", "monero"]
 
 default = ["all-currencies"]
 

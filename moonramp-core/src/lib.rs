@@ -25,12 +25,14 @@ pub use bip39;
 pub use bitcoin;
 #[cfg(feature = "crypto-currency-bitcoin-rpc")]
 pub use bitcoincore_rpc_json;
-#[cfg(feature = "crypto")]
+#[cfg(feature = "serialization")]
 pub use bs58;
 #[cfg(feature = "crypto")]
 pub use chacha20poly1305;
 #[cfg(feature = "time")]
 pub use chrono;
+#[cfg(feature = "crypto-currency-monero")]
+pub use curve25519_dalek;
 #[cfg(feature = "async-core")]
 pub use futures;
 #[cfg(feature = "crypto")]
