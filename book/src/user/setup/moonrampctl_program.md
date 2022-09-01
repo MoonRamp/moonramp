@@ -25,7 +25,7 @@ You should see a result like
 }
 ```
 
-The program is processed and then stored encrypted in the datastore ready for invocation. We are now ready to start storing wallets and processing crypto payments. For more information about programs capabilites see the [Programs](../../programs.md) section of this guide.
+The program is processed then stored encrypted in the datastore ready for invocation. We are now ready to start storing wallets and processing crypto payments. For more information about programs capabilites see the [Programs](../../programs.md) section of this guide.
 
 To get more info from `moonrampctl` on programs run the following.
 

@@ -10,7 +10,7 @@ Docker images run as a non-priviledged user `moonramp` and group `moonramp` with
 
 The following ports are defined via `EXPOSE` - `9370`, `9371`, and `9372`.
 
-No other libaries or bins are included in the image. If you wish to build an image that includes other tooling you can use a [multi-stage](https://docs.docker.com/develop/develop-images/multistage-build/) build to copy the MoonRamp bins. The docker image is very lean at around 35 MB.
+No other libraries or bins are included in the image. If you wish to build an image that includes other tooling you can use a [multi-stage](https://docs.docker.com/develop/develop-images/multistage-build/) build to copy the MoonRamp bins. The docker image is very lean at around 35 MB.
 
 For more information on docker see [here](https://docs.docker.com/get-started/overview/).
 
