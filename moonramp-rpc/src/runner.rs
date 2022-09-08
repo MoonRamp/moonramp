@@ -29,7 +29,7 @@ impl<R: 'static + Send + Sync> RpcRunner<R> {
                     uuid: tunnel_msg.uuid,
                     sender: Sender::Node((*self.node_id).clone()),
                     target: Some(tunnel_msg.sender),
-                    data: serde_json::from_str(&resp)?,
+                    data: serde_json::from_str(&resp.result)?,
                 };
                 super::egress(
                     &self.log_target,

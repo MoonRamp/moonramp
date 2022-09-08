@@ -5,12 +5,12 @@ homepage = "https://moonramp.github.io"
 repository = "https://github.com/moonramp/moonramp"
 description = "Crypto Payment Gateway WASM Bindings"
 readme = "README.md"
-version = "0.1.23"
+version = "0.1.24"
 edition = "2021"
 license = "MIT"
 
 [dependencies]
 wee_alloc = { version = "0.4.5" }
 
-moonramp-core = { version = "^0.1", path = "../../../../moonramp-core", features = ["embedded", "crypto-currency-bitcoin-rpc", "serialization"] }
+moonramp-core = { version = "^0.1", path = "../../../../moonramp-core", features = ["embedded", "crypto-currency-bitcoin-rpc", "crypto-currency-monero-rpc", "serialization"] }
 moonramp-wallet = { version = "^0.1", path = "../../../../moonramp-wallet", features = ["all-currencies"] }

@@ -47,6 +47,8 @@ pub use log;
 pub use lz4_flex;
 #[cfg(feature = "crypto-currency-monero")]
 pub use monero;
+#[cfg(feature = "crypto-currency-monero-rpc")]
+pub use monero_rpc;
 #[cfg(feature = "random")]
 pub use rand;
 #[cfg(feature = "serialization")]
