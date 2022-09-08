@@ -5,7 +5,7 @@ homepage = "https://moonramp.github.io"
 repository = "https://github.com/moonramp/moonramp"
 description = "Crypto Payment Gateway"
 readme = "README.md"
-version = "0.1.23"
+version = "0.1.24"
 edition = "2021"
 license = "MIT"
 
@@ -13,7 +13,7 @@ license = "MIT"
 # Needed for macro usage
 actix-web = { version = "4.1.0" }
 # Needed for macro usage
-jsonrpsee = { version = "0.14.0", features = ["macros", "server"], default-features = false }
+jsonrpsee = { version = "0.15", features = ["macros", "server"], default-features = false }
 
 moonramp-core = { version = "^0.1", path = "../moonramp-core", features = ["full", "wasm"] }
 moonramp-encryption = { version = "^0.1", path = "../moonramp-encryption" }

@@ -17,28 +17,12 @@ use moonramp_core::{
     anyhow, bitcoincore_rpc_json, hyper, log, serde, serde_json, uuid, wasmtime, wasmtime_wasi,
 };
 
+use crate::json_rpc::JsonRpcOneDotZeroResult;
+
 #[derive(Debug, Clone)]
 pub struct BitcoinRpcConfig {
     pub endpoint: String,
     pub basic_auth: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(crate = "moonramp_core::serde")]
-struct JsonRpcOneDotZeroResult<T> {
-    id: String,
-    result: Option<T>,
-    error: Option<serde_json::Value>,
-}
-
-impl<T> JsonRpcOneDotZeroResult<T> {
-    fn inner(self) -> anyhow::Result<T> {
-        match (self.result, self.error) {
-            (Some(res), None) => Ok(res),
-            (None, Some(err)) => Err(anyhow!(err.to_string())),
-            _ => Err(anyhow!("Invalid Response")),
-        }
-    }
 }
 
 pub fn add_to_linker(config: BitcoinRpcConfig, linker: &mut Linker<WasiCtx>) -> anyhow::Result<()> {
